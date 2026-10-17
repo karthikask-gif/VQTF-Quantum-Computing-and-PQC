@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Part 5 · Quantum Gates | VQTF Quantum Computing</title>
+<link rel="stylesheet" href="css/style.css">
+</head><body>
+<nav class="top"><a href="index.html">Home</a><a href="part1.html">Part 1 · Introduction</a><a href="part2.html">Part 2 · The Qubit</a><a href="part3.html">Part 3 · Math Foundations</a><a href="part4.html">Part 4 · Dirac Notation</a><a href="part5.html">Part 5 · Quantum Gates</a><a href="part6.html">Part 6 · Quantum Rules</a><a href="part7.html">Part 7 · Algorithms</a></nav>
+
+<div class="pg" id="p-part5">
+<header class="hero">
+<svg class="anim circ" viewBox="0 0 300 200" role="img" aria-label="A small quantum circuit with pulses travelling along two wires">
+<g stroke="#fff" stroke-opacity=".75" stroke-width="2.5"><line x1="20" y1="70" x2="280" y2="70"/><line x1="20" y1="140" x2="280" y2="140"/><line x1="170" y1="70" x2="170" y2="152"/></g>
+<rect x="80" y="48" width="44" height="44" rx="8" fill="#ffd36b"/><text x="102" y="78" text-anchor="middle" font-family="system-ui" font-weight="700" font-size="22" fill="#2a1f8f">H</text>
+<circle cx="170" cy="70" r="7" fill="#fff"/><circle cx="170" cy="140" r="14" fill="none" stroke="#fff" stroke-width="2.5"/>
+<g fill="#7ff5ef"><circle class="pulse" cx="20" cy="70" r="6"/><circle class="pulse" cx="20" cy="140" r="6"/></g>
+<text x="12" y="74" text-anchor="end" font-family="system-ui" font-size="13" fill="#fff">|0⟩</text><text x="12" y="144" text-anchor="end" font-family="system-ui" font-size="13" fill="#fff">|0⟩</text></svg>
+<h1>Part 5 · Quantum Gates</h1><p>The basic moves of a quantum computer: what each gate does, how it behaves, and what it is used for.</p></header>
+<main>
+
+<section class="s"><h2>5.1 What is a quantum gate?</h2>
+<p>A normal computer works by sending bits through <b>logic gates</b> such as NOT, AND and OR. A quantum computer works the same way, but its gates act on qubits. A <b>quantum gate</b> is one basic move you make on one or more qubits.</p>
+<p>From Parts 2 to 4 you already know everything a gate is made of:</p>
+<div class="grid"><div class="card"><b>A matrix</b><span>Every gate is a matrix that turns the old state into a new one (Part 3, 3.4).</span></div><div class="card"><b>A rotation</b><span>On the Bloch sphere, a single-qubit gate simply turns the arrow around some axis (Part 2).</span></div><div class="card"><b>Unitary</b><span>Gates never lose information and never change the 100% total, so every gate can be undone (Part 3, 3.6.3).</span></div></div>
+<div class="note"><b>A big difference from normal gates.</b> An ordinary AND gate takes two bits and gives one, so you can't tell what went in. Quantum gates always have as many outputs as inputs and can always be run backwards. Nothing is ever thrown away.</div>
+<h3>How to read a circuit diagram</h3>
+<p>Quantum programs are drawn as <b>circuits</b>. They read like a musical score: each line is a qubit, and time runs from left to right.</p>
+<svg class="cd" viewBox="0 0 520 220" role="img" aria-label="An example quantum circuit with labels" font-family="system-ui" font-size="13">
+<g stroke="var(--tx)" stroke-width="2"><line x1="60" y1="50" x2="470" y2="50"/><line x1="60" y1="110" x2="470" y2="110"/><line x1="60" y1="170" x2="470" y2="170"/><line x1="250" y1="50" x2="250" y2="122"/></g>
+<g fill="var(--tx)"><text x="52" y="55" text-anchor="end">|0⟩</text><text x="52" y="115" text-anchor="end">|0⟩</text><text x="52" y="175" text-anchor="end">|0⟩</text></g>
+<g fill="var(--sf)" stroke="var(--ac)" stroke-width="2"><rect x="110" y="30" width="40" height="40" rx="6"/><rect x="110" y="150" width="40" height="40" rx="6"/><rect x="420" y="30" width="44" height="40" rx="6"/><rect x="420" y="90" width="44" height="40" rx="6"/><rect x="420" y="150" width="44" height="40" rx="6"/></g>
+<g fill="var(--ac)" font-weight="700" font-size="18" text-anchor="middle"><text x="130" y="57">H</text><text x="130" y="177">X</text></g>
+<circle cx="250" cy="50" r="6" fill="var(--tx)"/><circle cx="250" cy="110" r="12" fill="none" stroke="var(--tx)" stroke-width="2"/>
+<g fill="none" stroke="var(--ac)" stroke-width="2"><path d="M429 62 a13 13 0 0 1 26 0"/><path d="M429 122 a13 13 0 0 1 26 0"/><path d="M429 182 a13 13 0 0 1 26 0"/><line x1="442" y1="62" x2="452" y2="42"/><line x1="442" y1="122" x2="452" y2="102"/><line x1="442" y1="182" x2="452" y2="162"/></g>
+<g fill="var(--mu)" font-size="12"><text x="130" y="88" text-anchor="middle">1-qubit gates</text><text x="250" y="145" text-anchor="middle">2-qubit gate (CNOT)</text><text x="442" y="208" text-anchor="middle">measure</text><text x="300" y="208" text-anchor="middle">time →</text><text x="64" y="208">each line = one qubit</text></g></svg>
+<p>In this example the first qubit gets an H gate and the third gets an X gate. Then a CNOT links the first two qubits, and finally all three are measured. Every gate here is explained below.</p></section>
+
+<section class="s"><h2>5.2 Interactive: gate lab</h2>
+<p>Press any gate and watch what it does to the arrow. The yellow line shows the axis the gate turns around. Below the sphere you can see the state in Dirac notation and the chance of each answer. Use this lab alongside the sections that follow.</p>
+<div id="lab"><canvas id="labC" role="img" aria-label="Bloch sphere showing the effect of the chosen gate"></canvas>
+<div class="lb"><button data-g="X">X</button><button data-g="Y">Y</button><button data-g="Z">Z</button><button data-g="H">H</button><button data-g="S">S</button><button data-g="Sd">S†</button><button data-g="T">T</button><button data-g="Td">T†</button></div>
+<div class="lb"><button data-g="Rx">Rx(θ)</button><button data-g="Ry">Ry(θ)</button><button data-g="Rz">Rz(θ)</button><label class="th">θ = <b id="labTv"></b><input id="labT" type="range" min="0" max="360" step="15" value="90" aria-label="Rotation angle"></label></div>
+<div class="lb"><span class="mu">Start from:</span><button data-s="0">|0⟩</button><button data-s="1">|1⟩</button><button data-s="+">|+⟩</button><button data-s="+i">|+i⟩</button></div>
+<p class="m lstate" id="labE"></p><p id="labN" class="mu"></p>
+<div class="bar"><i id="lab0"></i></div><div class="bar"><i class="b" id="lab1"></i></div>
+<p class="mu" id="labH"></p></div></section>
+
+<section class="s"><h2>Single-qubit gates</h2><p>These gates act on one qubit at a time. Each one is a turn of the Bloch sphere.</p>
+<div class="tw"><table><tr><th>Gate</th><th>Nickname</th><th>Turn on the Bloch sphere</th></tr>
+<tr><td><a href="#g-x">X</a></td><td>Bit flip (quantum NOT)</td><td>Half-turn (180°) around x</td></tr>
+<tr><td><a href="#g-z">Z</a></td><td>Phase flip</td><td>Half-turn around z</td></tr>
+<tr><td><a href="#g-y">Y</a></td><td>Bit and phase flip</td><td>Half-turn around y</td></tr>
+<tr><td><a href="#g-h">H</a></td><td>Hadamard (superposition maker)</td><td>Half-turn around the diagonal between x and z</td></tr>
+<tr><td><a href="#g-st">S, T</a></td><td>Phase gates</td><td>Quarter-turn (90°) and eighth-turn (45°) around z</td></tr>
+<tr><td><a href="#g-r">Rx, Ry, Rz</a></td><td>Rotation gates</td><td>Any angle you choose, around x, y or z</td></tr></table></div></section>
+
+
+<section class="s" id="g-x"><h2>5.3 The X gate: bit flip</h2>
+<div class="gt"><div><p class="lead"><span class="gsym">X</span> is the quantum version of the NOT gate. It swaps 0 and 1.</p><p>If the qubit is surely 0, X makes it surely 1, and the other way round. If the qubit is a mix, X swaps the two amounts: α|0⟩ + β|1⟩ becomes β|0⟩ + α|1⟩. A qubit that was 70% likely to read 0 becomes 70% likely to read 1.</p></div>
+<figure class="mini"><canvas data-mini="X|0" role="img" aria-label="Animation of the X gate on the Bloch sphere"></canvas><figcaption>X turns |0⟩ (top) into |1⟩ (bottom).</figcaption></figure></div>
+<div class="two gfacts"><div><h4>Matrix</h4><p><span class="mat" style="grid-template-columns:repeat(2,auto)"><i>0</i><i>1</i><i>1</i><i>0</i></span><br>This is the swap matrix from Part 3 (also called σx).</p></div><div><h4>In Dirac notation</h4><p>X|0⟩ = |1⟩<br>X|1⟩ = |0⟩<br>X = |0⟩⟨1| + |1⟩⟨0| (Part 4, 4.5)</p></div></div>
+<h4>On the Bloch sphere</h4><p>A half-turn (180°) around the x axis. The top (|0⟩) goes to the bottom (|1⟩). Points on the x axis, |+⟩ and |−⟩, stay where they are.</p>
+<h4>Properties</h4><ul><li><b>Self-inverse:</b> doing X twice gets you back where you started (X·X = I).</li><li><b>Changes the chances:</b> it swaps the chance of 0 with the chance of 1.</li><li><b>Eigenstates:</b> |+⟩ (eigenvalue +1) and |−⟩ (eigenvalue −1) are left unchanged, apart from a sign on |−⟩.</li><li><b>One of the three Pauli gates</b>, together with Y and Z.</li></ul>
+<h4>Where it is used</h4><div class="grid"><div class="card"><b>Setting up inputs</b><span>Most programs start with every qubit at |0⟩. An X gate turns any of them into a 1.</span></div><div class="card"><b>Classical logic</b><span>Combined with other gates it builds reversible versions of everyday logic, such as adders.</span></div><div class="card"><b>Error models</b><span>A random unwanted X is called a <i>bit-flip error</i>. Error-correction codes are designed to catch and undo it.</span></div></div></section>
+
+<section class="s" id="g-z"><h2>5.4 The Z gate: phase flip</h2>
+<div class="gt"><div><p class="lead"><span class="gsym">Z</span> leaves 0 alone and puts a minus sign on the 1 part.</p><p>Z changes α|0⟩ + β|1⟩ into α|0⟩ − β|1⟩. The chances of reading 0 or 1 <b>do not change</b>, because a minus sign disappears when you square. What changes is the phase: the 0 and 1 waves go from in step to opposite (Part 2, 2.2). That difference shows up as soon as other gates mix the parts.</p></div>
+<figure class="mini"><canvas data-mini="Z|+" role="img" aria-label="Animation of the Z gate on the Bloch sphere"></canvas><figcaption>Z turns |+⟩ into |−⟩ around the equator.</figcaption></figure></div>
+<div class="two gfacts"><div><h4>Matrix</h4><p><span class="mat" style="grid-template-columns:repeat(2,auto)"><i>1</i><i>0</i><i>0</i><i>−1</i></span><br>The sign-flip matrix from Part 3 (also called σz).</p></div><div><h4>In Dirac notation</h4><p>Z|0⟩ = |0⟩<br>Z|1⟩ = −|1⟩<br>Z|+⟩ = |−⟩ and Z|−⟩ = |+⟩</p></div></div>
+<h4>On the Bloch sphere</h4><p>A half-turn around the z axis. The poles stay put, and points on the equator swing to the opposite side: |+⟩ becomes |−⟩.</p>
+<h4>Properties</h4><ul><li><b>Self-inverse:</b> Z·Z = I.</li><li><b>Never changes the chances</b> of 0 or 1. It only changes phase.</li><li><b>Eigenstates:</b> |0⟩ (+1) and |1⟩ (−1).</li><li><b>Related to X:</b> H·Z·H = X. Z is "X seen from a different angle".</li></ul>
+<h4>Where it is used</h4><div class="grid"><div class="card"><b>Marking answers</b><span>Search algorithms such as Grover's "mark" the right answer by flipping its sign with a Z-type gate.</span></div><div class="card"><b>Error models</b><span>An unwanted Z is a <i>phase-flip error</i>, which has no counterpart in normal computers. Quantum error correction must catch these too.</span></div><div class="card"><b>Building other gates</b><span>Z, together with H, makes X. With control qubits added, it becomes CZ (5.10).</span></div></div></section>
+
+<section class="s" id="g-y"><h2>5.5 The Y gate: bit and phase flip</h2>
+<div class="gt"><div><p class="lead"><span class="gsym">Y</span> does both jobs at once: it swaps 0 and 1 and adjusts the phase.</p><p>Y swaps the 0 and 1 parts like X, and also changes their phases like Z. In fact Y = i·X·Z. On its own it is used less often than X and Z, but it completes the set of three Pauli gates, one for each axis of the Bloch sphere.</p></div>
+<figure class="mini"><canvas data-mini="Y|0" role="img" aria-label="Animation of the Y gate on the Bloch sphere"></canvas><figcaption>Y also takes |0⟩ to |1⟩, but swings through the side.</figcaption></figure></div>
+<div class="two gfacts"><div><h4>Matrix</h4><p><span class="mat" style="grid-template-columns:repeat(2,auto)"><i>0</i><i>−i</i><i>i</i><i>0</i></span><br>(also called σy)</p></div><div><h4>In Dirac notation</h4><p>Y|0⟩ = i|1⟩<br>Y|1⟩ = −i|0⟩<br>(the i in front is a phase you can't measure)</p></div></div>
+<h4>On the Bloch sphere</h4><p>A half-turn around the y axis. Like X it takes the top to the bottom, but by a different route: X swings the arrow through the front, while Y swings it through the side.</p>
+<h4>Properties</h4><ul><li><b>Self-inverse:</b> Y·Y = I.</li><li><b>Changes the chances:</b> it swaps them, just like X.</li><li><b>Eigenstates:</b> |+i⟩ (+1) and |−i⟩ (−1).</li><li><b>Relations:</b> Y = i·X·Z. Any two different Pauli gates "anti-commute": X·Z = −Z·X.</li></ul>
+<h4>Where it is used</h4><div class="grid"><div class="card"><b>Error models</b><span>A Y error is a bit flip and phase flip together. With X and Z it covers every kind of single-qubit error.</span></div><div class="card"><b>Measuring along y</b><span>Asking the y question (Part 2, 2.6) is the same as measuring Y.</span></div><div class="card"><b>Testing hardware</b><span>Pauli gates are used to calibrate and benchmark real quantum chips.</span></div></div></section>
+
+<section class="s" id="g-h"><h2>5.6 The H gate: Hadamard</h2>
+<div class="gt"><div><p class="lead"><span class="gsym">H</span> is the "superposition maker". It turns a definite 0 or 1 into a perfect 50/50 mix.</p><p>H turns |0⟩ into |+⟩ (50/50, parts in step) and |1⟩ into |−⟩ (50/50, parts opposite). It is the "mixer A" from Part 3. Run it twice and you are back where you started. That is interference at work: the two paths to the wrong answer cancel (Part 3, 3.7).</p></div>
+<figure class="mini"><canvas data-mini="H|0" role="img" aria-label="Animation of the H gate on the Bloch sphere"></canvas><figcaption>H turns |0⟩ into |+⟩ around the diagonal axis.</figcaption></figure></div>
+<div class="two gfacts"><div><h4>Matrix</h4><p>(1/√2) <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>1</i><i>1</i><i>1</i><i>−1</i></span><br>the mixer A from Part 3</p></div><div><h4>In Dirac notation</h4><p>H|0⟩ = |+⟩ = (|0⟩ + |1⟩)/√2<br>H|1⟩ = |−⟩ = (|0⟩ − |1⟩)/√2<br>H|+⟩ = |0⟩, H|−⟩ = |1⟩</p></div></div>
+<h4>On the Bloch sphere</h4><p>A half-turn around the diagonal axis halfway between x and z. This swaps the z axis with the x axis: the top (|0⟩) goes to |+⟩ on the equator, and |+⟩ goes back to the top.</p>
+<h4>Properties</h4><ul><li><b>Self-inverse:</b> H·H = I.</li><li><b>Swaps the questions:</b> it exchanges the z axis and the x axis, so H·X·H = Z and H·Z·H = X.</li><li><b>Makes even mixes:</b> from |0⟩ or |1⟩ it always gives a 50/50 chance.</li><li><b>Applied to n qubits</b> it creates an equal mix of all 2ⁿ possible inputs at once.</li></ul>
+<h4>Where it is used</h4><div class="grid"><div class="card"><b>Starting algorithms</b><span>Almost every algorithm (Deutsch–Jozsa, Grover, Simon, Shor) starts by putting its qubits through H to explore all inputs together.</span></div><div class="card"><b>Making entanglement</b><span>H followed by CNOT creates a Bell pair (5.9).</span></div><div class="card"><b>Quantum key distribution</b><span>In the BB84 protocol, the sender uses H to switch randomly between two ways of encoding bits.</span></div><div class="card"><b>Measuring along x</b><span>Apply H, then measure as usual, and you have asked the x question.</span></div></div></section>
+
+<section class="s" id="g-st"><h2>5.7 The S and T gates: phase turns</h2>
+<div class="gt"><div><p class="lead"><span class="gsym">S, T</span> turn the phase of the 1 part by a quarter-turn (S) or an eighth-turn (T).</p><p>Like Z, these gates leave |0⟩ alone and only change the phase of the 1 part, so <b>they never change the chances</b>. Z turns the phase by 180°, S by 90° and T by 45°. Think of them as finer and finer steps on the same dial: two T's make an S, and two S's make a Z.</p></div>
+<figure class="mini"><canvas data-mini="S|+" role="img" aria-label="Animation of the S, T gate on the Bloch sphere"></canvas><figcaption>S turns |+⟩ a quarter-turn round the equator to |+i⟩.</figcaption></figure></div>
+<div class="two gfacts"><div><h4>Matrix</h4><p>S = <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>1</i><i>0</i><i>0</i><i>i</i></span> &nbsp; T = <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>1</i><i>0</i><i>0</i><i>e<sup>iπ/4</sup></i></span></p></div><div><h4>In Dirac notation</h4><p>S|1⟩ = i|1⟩ &nbsp; T|1⟩ = e<sup>iπ/4</sup>|1⟩<br>S|+⟩ = |+i⟩<br>Undo them with S† and T†, which turn the other way.</p></div></div>
+<h4>On the Bloch sphere</h4><p>A turn around the z axis: 90° for S and 45° for T. The poles stay put and points on the equator move around it. S takes |+⟩ to |+i⟩.</p>
+<h4>Properties</h4><ul><li><b>Not self-inverse:</b> S·S = Z, not I. Undo them with S† ("S-dagger") and T†.</li><li><b>Never change the chances</b> of 0 or 1.</li><li><b>Ladder:</b> T·T = S and S·S = Z.</li><li><b>Eigenstates:</b> |0⟩ and |1⟩, like Z.</li></ul>
+<h4>Where it is used</h4><div class="grid"><div class="card"><b>Unlocking full power</b><span>H and S alone can't do everything. Adding T makes a gate set that can build any quantum program (5.12).</span></div><div class="card"><b>Cost of a program</b><span>In error-corrected computers T gates are the most expensive step, so programs are often judged by their "T-count".</span></div><div class="card"><b>Quantum Fourier transform</b><span>The QFT, a key step inside Shor's algorithm, is built from these small phase turns.</span></div><div class="card"><b>Measuring along y</b><span>Apply S† and then H, and an ordinary measurement asks the y question.</span></div></div></section>
+
+<section class="s" id="g-r"><h2>5.8 Rotation gates: Rx, Ry, Rz</h2>
+<div class="gt"><div><p class="lead"><span class="gsym">R</span> gates let you turn the arrow by <b>any angle you like</b>, not just fixed steps.</p><p>Rx(θ), Ry(θ) and Rz(θ) turn the Bloch sphere by an angle θ around the x, y or z axis. They are like dimmer switches compared with the on/off X, Y and Z. In fact X, Y and Z are just the 180° versions, and S and T are Rz at 90° and 45°, give or take a phase you can't measure.</p></div>
+<figure class="mini"><canvas data-mini="Rx|0" role="img" aria-label="Animation of the R gate on the Bloch sphere"></canvas><figcaption>Rx(90°) tilts |0⟩ a quarter-turn toward the equator.</figcaption></figure></div>
+<div class="two gfacts"><div><h4>Matrix</h4><p>Ry(θ) = <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>cos θ/2</i><i>−sin θ/2</i><i>sin θ/2</i><i>cos θ/2</i></span><br>Rz(θ) = <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>e<sup>−iθ/2</sup></i><i>0</i><i>0</i><i>e<sup>iθ/2</sup></i></span></p></div><div><h4>In Dirac notation</h4><p>Ry(θ)|0⟩ = cos(θ/2)|0⟩ + sin(θ/2)|1⟩<br>This is exactly the "tilt" slider from Part 2.</p></div></div>
+<h4>On the Bloch sphere</h4><p>A turn by θ around the chosen axis. Rx and Ry change the chances because they tilt the arrow up or down. Rz only changes the phase.</p>
+<h4>Properties</h4><ul><li><b>Undo:</b> turn by −θ. R(θ)·R(−θ) = I.</li><li><b>Adding up:</b> two turns around the same axis add, R(a)·R(b) = R(a + b).</li><li><b>Complete:</b> any single-qubit gate at all can be built as Rz·Ry·Rz with suitable angles.</li></ul>
+<h4>Where it is used</h4><div class="grid"><div class="card"><b>Chemistry (VQE)</b><span>Variational algorithms tune rotation angles, like knobs, to find a molecule's lowest energy.</span></div><div class="card"><b>Optimisation (QAOA)</b><span>Uses tuned rotations to search for good solutions to scheduling and routing problems.</span></div><div class="card"><b>Quantum machine learning</b><span>The angles play the role of the "weights" that are learned during training.</span></div><div class="card"><b>Hardware control</b><span>Real chips do their rotations with timed pulses of microwaves or lasers, and the pulse length sets the angle.</span></div></div></section>
+
+<section class="s"><h2>Multi-qubit gates</h2><p>One-qubit gates can never link qubits together. For that you need gates that act on two or more qubits at once, where one qubit's value decides what happens to another.</p></section>
+
+<section data-split="h3" class="s" id="g-cnot"><h2>5.9 The CNOT gate: controlled NOT</h2>
+<div class="gt"><div><p class="lead"><span class="gsym">CNOT</span> acts on two qubits: a <b>control</b> and a <b>target</b>. If the control is 1, it flips the target. If the control is 0, it does nothing.</p>
+<p>It is an "if" statement in a single gate: <i>if</i> the control is 1, apply X to the target. For ordinary 0/1 inputs the target becomes (target XOR control). This is how a quantum computer adds bits without losing information.</p></div>
+<figure class="mini"><svg viewBox="0 0 200 150" role="img" aria-label="CNOT circuit symbol" font-family="system-ui" font-size="13"><g stroke="var(--tx)" stroke-width="2"><line x1="20" y1="45" x2="180" y2="45"/><line x1="20" y1="110" x2="180" y2="110"/><line x1="100" y1="45" x2="100" y2="126"/></g><circle cx="100" cy="45" r="7" fill="var(--tx)"/><circle cx="100" cy="110" r="16" fill="none" stroke="var(--tx)" stroke-width="2"/><text x="100" y="25" text-anchor="middle" fill="var(--mu)">control ●</text><text x="100" y="145" text-anchor="middle" fill="var(--mu)">target ⊕</text></svg><figcaption>The dot marks the control, the ⊕ marks the target.</figcaption></figure></div>
+<h3>Try it: the truth table</h3>
+<p>Click the input bits to change them.</p>
+<div class="cx"><div><span class="mu">Control in</span><button id="cxC">0</button></div><div><span class="mu">Target in</span><button id="cxT">0</button></div><div class="cxa">→</div><div><span class="mu">Control out</span><b id="cxCo">0</b></div><div><span class="mu">Target out</span><b id="cxTo">0</b></div></div>
+<p id="cxM" class="mu"></p>
+<div class="tw"><table><tr><th>Input (control, target)</th><th>Output</th></tr><tr><td>|00⟩</td><td>|00⟩</td></tr><tr><td>|01⟩</td><td>|01⟩</td></tr><tr><td>|10⟩</td><td>|11⟩ (target flipped)</td></tr><tr><td>|11⟩</td><td>|10⟩ (target flipped)</td></tr></table></div>
+<div class="two gfacts"><div><h4>Matrix (4×4)</h4><p><span class="mat" style="grid-template-columns:repeat(4,auto)"><i>1</i><i>0</i><i>0</i><i>0</i><i>0</i><i>1</i><i>0</i><i>0</i><i>0</i><i>0</i><i>0</i><i>1</i><i>0</i><i>0</i><i>1</i><i>0</i></span></p><p class="mu">Rows and columns go in the order 00, 01, 10, 11. The bottom-right corner is an X.</p></div><div><h4>In Dirac notation</h4><p>CNOT = |0⟩⟨0| ⊗ I + |1⟩⟨1| ⊗ X<br>Read it as: "if the control is 0, do nothing; if it is 1, apply X".</p></div></div>
+<h3>The magic: making entanglement</h3>
+<p>Something special happens when the control is a <i>mix</i>. Step through this two-gate circuit:</p>
+<div class="bell"><svg viewBox="0 0 300 110" role="img" aria-label="H then CNOT circuit" font-family="system-ui"><g stroke="var(--tx)" stroke-width="2"><line x1="30" y1="35" x2="290" y2="35"/><line x1="30" y1="85" x2="290" y2="85"/><line x1="190" y1="35" x2="190" y2="98"/></g>
+<rect id="bS1" x="90" y="15" width="40" height="40" rx="6" fill="var(--sf)" stroke="var(--ac)" stroke-width="2"/><text x="110" y="42" text-anchor="middle" font-weight="700" fill="var(--ac)" font-size="18">H</text>
+<circle cx="190" cy="35" r="6" fill="var(--tx)"/><circle id="bS2" cx="190" cy="85" r="13" fill="none" stroke="var(--tx)" stroke-width="2"/>
+<line id="bLine" x1="60" y1="8" x2="60" y2="104" stroke="#d9830b" stroke-width="3" stroke-dasharray="5 4"/>
+<text x="22" y="40" text-anchor="end" fill="var(--tx)" font-size="13">A</text><text x="22" y="90" text-anchor="end" fill="var(--tx)" font-size="13">B</text></svg>
+<div class="lb"><button id="bBack">Back</button><button id="bNext" class="go">Next step</button></div>
+<p id="bTxt"></p><p class="m lstate" id="bE"></p><div id="bBars" class="rg"></div></div>
+<p>The result, (|00⟩ + |11⟩)/√2, is the <b>Bell state</b> from Part 3 (3.9). The two qubits are now entangled: each one alone is a coin toss, but they always agree.</p>
+<h4>Properties</h4><ul><li><b>Self-inverse:</b> CNOT·CNOT = I.</li><li><b>Creates entanglement</b> when the control is in a mix. This is something no one-qubit gate can do.</li><li><b>Leaves the control unchanged</b> for ordinary 0/1 inputs.</li><li>With one-qubit gates it can build <b>any</b> multi-qubit gate (5.12).</li></ul>
+<h4>Where it is used</h4><div class="grid"><div class="card"><b>Entanglement</b><span>Bell pairs for quantum networks and experiments.</span></div><div class="card"><b>Teleportation</b><span>Sending a qubit's state using one Bell pair plus two ordinary bits.</span></div><div class="card"><b>Error correction</b><span>CNOTs copy "parity" information onto helper qubits, which reveals errors without disturbing the data.</span></div><div class="card"><b>Arithmetic</b><span>Its XOR behaviour is the basic step in quantum adders.</span></div></div></section>
+
+<section class="s" id="g-cz"><h2>5.10 CZ and SWAP</h2>
+<div class="two"><div><h3>CZ: controlled-Z</h3><p>If the control is 1, apply Z to the target. In practice this just puts a minus sign on |11⟩ and leaves the other three alone.</p><p><span class="mat" style="grid-template-columns:repeat(4,auto)"><i>1</i><i>0</i><i>0</i><i>0</i><i>0</i><i>1</i><i>0</i><i>0</i><i>0</i><i>0</i><i>1</i><i>0</i><i>0</i><i>0</i><i>0</i><i>−1</i></span></p>
+<ul><li><b>Symmetric:</b> it doesn't matter which qubit you call the control.</li><li><b>Self-inverse.</b></li><li>CNOT = (H on target) · CZ · (H on target).</li></ul>
+<p><b>Used for:</b> it is the natural two-qubit gate on many superconducting chips, and it builds the "cluster states" used in measurement-based quantum computing.</p></div>
+<div><h3>SWAP</h3><p>Swaps the states of two qubits: |01⟩ becomes |10⟩ and the other way round.</p><p><span class="mat" style="grid-template-columns:repeat(4,auto)"><i>1</i><i>0</i><i>0</i><i>0</i><i>0</i><i>0</i><i>1</i><i>0</i><i>0</i><i>1</i><i>0</i><i>0</i><i>0</i><i>0</i><i>0</i><i>1</i></span></p>
+<ul><li><b>Self-inverse.</b></li><li>Can be built from three CNOTs in a row.</li><li>Doesn't create entanglement.</li></ul>
+<p><b>Used for:</b> on real chips, each qubit can only talk to its neighbours. SWAPs move qubit states around so that the right qubits end up next to each other. This is called "routing".</p></div></div></section>
+
+<section class="s" id="g-ccx"><h2>5.11 The Toffoli gate (CCNOT)</h2>
+<p class="lead"><span class="gsym">CCNOT</span> has <b>two</b> controls and one target. It flips the target only if <b>both</b> controls are 1.</p>
+<p>If the target starts at 0, it ends up holding <i>control 1 AND control 2</i>. That makes Toffoli a <b>reversible AND gate</b>, and with it a quantum computer can do any calculation a normal computer can.</p>
+<div class="two"><div class="tw"><table><tr><th>Controls</th><th>Target in</th><th>Target out</th></tr><tr><td>0 0</td><td>t</td><td>t</td></tr><tr><td>0 1</td><td>t</td><td>t</td></tr><tr><td>1 0</td><td>t</td><td>t</td></tr><tr><td>1 1</td><td>t</td><td><b>flipped</b></td></tr></table></div>
+<svg class="cd sm" viewBox="0 0 200 160" role="img" aria-label="Toffoli circuit symbol"><g stroke="var(--tx)" stroke-width="2"><line x1="20" y1="35" x2="180" y2="35"/><line x1="20" y1="80" x2="180" y2="80"/><line x1="20" y1="125" x2="180" y2="125"/><line x1="100" y1="35" x2="100" y2="140"/></g><circle cx="100" cy="35" r="7" fill="var(--tx)"/><circle cx="100" cy="80" r="7" fill="var(--tx)"/><circle cx="100" cy="125" r="15" fill="none" stroke="var(--tx)" stroke-width="2"/></svg></div>
+<h4>Properties</h4><ul><li><b>Self-inverse.</b></li><li><b>Classically complete:</b> it can do any ordinary logic without losing information.</li><li>Built on real hardware from about 6 CNOTs plus several T gates.</li></ul>
+<h4>Where it is used</h4><div class="grid"><div class="card"><b>Arithmetic</b><span>Adders and multipliers, such as the ones Shor's algorithm uses to factor numbers.</span></div><div class="card"><b>Search oracles</b><span>Checking whether a candidate answer is correct inside Grover's search.</span></div><div class="card"><b>Error correction</b><span>Some codes use it to fix errors automatically.</span></div></div></section>
+
+<section class="s"><h2>5.12 Universal gate sets: how few gates do you need?</h2>
+<p>There are endless possible gates, but you don't need all of them. Just as every word can be written with 26 letters, every quantum program can be built, as accurately as you like, from a small <b>universal set</b>:</p>
+<p style="text-align:center"><span class="m">H, S, T and CNOT</span></p>
+<div class="grid"><div class="card"><b>Clifford gates</b><span>H, S and CNOT (and the Paulis). Useful, but on their own a normal computer can simulate them efficiently, so they give no speed-up.</span></div><div class="card"><b>The extra ingredient</b><span>Adding T (or Toffoli) breaks that limit and unlocks full quantum power.</span></div><div class="card"><b>Hardware sets</b><span>Each chip has a few "native" gates, such as rotations plus CZ, and compiles everything else from them.</span></div></div>
+<div class="note"><b>Measurement isn't a gate.</b> The meter symbol at the end of a circuit means "look at the qubit". Unlike gates, it can't be undone and it ends the mix (Part 3, 3.3).</div></section>
+
+<section class="s"><h2>5.13 Cheat sheet</h2>
+<div class="tw"><table><tr><th>Gate</th><th>Qubits</th><th>What it does</th><th>Changes chances?</th><th>Self-inverse?</th><th>Typical use</th></tr>
+<tr><td>X</td><td>1</td><td>Swaps 0 and 1</td><td>Yes</td><td>Yes</td><td>Set inputs, logic</td></tr>
+<tr><td>Y</td><td>1</td><td>Swap + phase</td><td>Yes</td><td>Yes</td><td>Error models</td></tr>
+<tr><td>Z</td><td>1</td><td>Minus sign on 1</td><td>No</td><td>Yes</td><td>Marking answers</td></tr>
+<tr><td>H</td><td>1</td><td>0/1 ↔ 50/50 mix</td><td>Yes</td><td>Yes</td><td>Start of algorithms</td></tr>
+<tr><td>S</td><td>1</td><td>Quarter-turn of phase</td><td>No</td><td>No (S†)</td><td>Phase steps, y questions</td></tr>
+<tr><td>T</td><td>1</td><td>Eighth-turn of phase</td><td>No</td><td>No (T†)</td><td>Universality, QFT</td></tr>
+<tr><td>Rx, Ry, Rz</td><td>1</td><td>Turn by any angle</td><td>Rx, Ry yes; Rz no</td><td>No (−θ)</td><td>VQE, QAOA, ML</td></tr>
+<tr><td>CNOT</td><td>2</td><td>If control 1, flip target</td><td>Yes</td><td>Yes</td><td>Entanglement</td></tr>
+<tr><td>CZ</td><td>2</td><td>Minus sign on |11⟩</td><td>No</td><td>Yes</td><td>Native hardware gate</td></tr>
+<tr><td>SWAP</td><td>2</td><td>Exchange two qubits</td><td>Yes</td><td>Yes</td><td>Routing on chips</td></tr>
+<tr><td>Toffoli</td><td>3</td><td>If both controls 1, flip target</td><td>Yes</td><td>Yes</td><td>Arithmetic, oracles</td></tr></table></div></section>
+<div class="pn"><a href="part4.html">← Part 4</a><a href="part6.html">Part 6 →</a></div></main></div>
+
+<script src="js/part5.js"></script>
+<script src="js/site.js"></script>
+</body></html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Part 4 · Dirac Notation | VQTF Quantum Computing</title>
+<link rel="stylesheet" href="css/style.css">
+</head><body>
+<nav class="top"><a href="index.html">Home</a><a href="part1.html">Part 1 · Introduction</a><a href="part2.html">Part 2 · The Qubit</a><a href="part3.html">Part 3 · Math Foundations</a><a href="part4.html">Part 4 · Dirac Notation</a><a href="part5.html">Part 5 · Quantum Gates</a><a href="part6.html">Part 6 · Quantum Rules</a><a href="part7.html">Part 7 · Algorithms</a></nav>
+
+<div class="pg" id="p-part4">
+<header class="hero">
+<svg class="anim bk" viewBox="0 0 340 100" role="img" aria-label="A bra and a ket sliding together to form a bracket" style="color:#fff">
+<g class="l"><polyline points="118,20 104,45 118,70"/><text x="134" y="56">a</text><line x1="150" y1="18" x2="150" y2="72"/><text class="tg" x="128" y="94">bra</text></g>
+<g class="r"><line x1="150" y1="18" x2="150" y2="72"/><text x="166" y="56">b</text><polyline points="182,20 196,45 182,70"/><text class="tg" x="172" y="94">ket</text></g>
+<text class="eq" x="210" y="54">= a number</text></svg>
+<h1>Part 4 · Dirac Notation</h1><p>The short-hand that every quantum book uses, explained one symbol at a time.</p></header>
+<main class="dn">
+
+<section class="s"><h2>4.1 Why a special notation?</h2>
+<p>In Part 3 we wrote qubit states as lists of numbers, like <span class="m">[0.71, 0.71]</span>. That works for one qubit, but it quickly gets messy: 10 qubits need a list of 1,024 numbers.</p>
+<p>In 1939 the physicist <b>Paul Dirac</b> came up with a neater way to write states. Instead of the full list, you write a short <b>name</b> inside a special bracket. It's like writing "Mum's house" instead of a full street address: shorter, clearer, and everyone knows what you mean.</p>
+<div class="grid"><div class="card"><b>Ket |ψ⟩</b><span>A state. Points to the right.</span></div><div class="card"><b>Bra ⟨ψ|</b><span>The "mirror image" of a state. Points to the left.</span></div><div class="card"><b>Bracket ⟨a|b⟩</b><span>A bra and a ket joined: gives one number, the overlap.</span></div><div class="card"><b>Ket-bra |a⟩⟨b|</b><span>A ket and a bra the other way round: gives a matrix, a machine.</span></div></div>
+<div class="note">The name is a pun: a <b>bra</b> plus a <b>ket</b> makes a <b>bra-ket</b>, a "bracket". So it is also called <b>bra-ket notation</b>.</div></section>
+
+<section class="s"><h2>4.2 Kets |ψ⟩: writing a state</h2>
+<p>A <b>ket</b> is a vertical bar and an angle bracket around a name: <span class="m">|name⟩</span>. It always means "the state called <i>name</i>". Behind the scenes, a ket is a <b>column</b> of numbers.</p>
+<div class="tw"><table><tr><th>Ket</th><th>Read aloud</th><th>Column of numbers</th><th>Meaning</th></tr>
+<tr><td>|0⟩</td><td>"ket zero"</td><td><span class="mat" style="grid-template-columns:auto"><i>1</i><i>0</i></span></td><td>Surely 0</td></tr>
+<tr><td>|1⟩</td><td>"ket one"</td><td><span class="mat" style="grid-template-columns:auto"><i>0</i><i>1</i></span></td><td>Surely 1</td></tr>
+<tr><td>|+⟩</td><td>"ket plus"</td><td><span class="mat" style="grid-template-columns:auto"><i>0.71</i><i>0.71</i></span></td><td>50/50, parts in step</td></tr>
+<tr><td>|−⟩</td><td>"ket minus"</td><td><span class="mat" style="grid-template-columns:auto"><i>0.71</i><i>−0.71</i></span></td><td>50/50, parts opposite</td></tr>
+<tr><td>|ψ⟩</td><td>"ket psi"</td><td><span class="mat" style="grid-template-columns:auto"><i>α</i><i>β</i></span></td><td>Any state: α of 0, β of 1</td></tr></table></div>
+<p>The name inside can be anything: a number, a sign, or a Greek letter like ψ ("psi", said "sigh"). Greek letters are just the usual way to say "some state we haven't named yet".</p>
+<div class="ex"><b>Writing a mix.</b> Because |0⟩ and |1⟩ are columns, we can add them like any lists of numbers:<br>
+<span class="m">0.6|0⟩ + 0.8|1⟩</span> = 0.6 × <span class="mat" style="grid-template-columns:auto"><i>1</i><i>0</i></span> + 0.8 × <span class="mat" style="grid-template-columns:auto"><i>0</i><i>1</i></span> = <span class="mat" style="grid-template-columns:auto"><i>0.6</i><i>0.8</i></span><br>
+The Dirac version on the left is shorter and tells you at a glance: amplitude 0.6 for 0 and 0.8 for 1, so chances of 0.6² = 36% and 0.8² = 64%.</div></section>
+
+<section class="s"><h2>4.3 Bras ⟨ψ|: the mirror image</h2>
+<p>A <b>bra</b> is a ket flipped around: <span class="m">⟨name|</span>. It stands for the same state, but written as a <b>row</b> instead of a column. You can think of it as the state looking at its reflection in a mirror.</p>
+<p>There is one extra rule. If the numbers are complex (they contain <i>i</i>), every <i>+i</i> becomes <i>−i</i> and every <i>−i</i> becomes <i>+i</i> in the bra. This is called taking the <b>conjugate</b>. For ordinary numbers nothing changes.</p>
+<div class="tw"><table><tr><th>Ket (column)</th><th>Bra (row)</th></tr>
+<tr><td>|0⟩ = <span class="mat" style="grid-template-columns:auto"><i>1</i><i>0</i></span></td><td>⟨0| = <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>1</i><i>0</i></span></td></tr>
+<tr><td>|+⟩ = <span class="mat" style="grid-template-columns:auto"><i>0.71</i><i>0.71</i></span></td><td>⟨+| = <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>0.71</i><i>0.71</i></span></td></tr>
+<tr><td>|+i⟩ = <span class="mat" style="grid-template-columns:auto"><i>0.71</i><i>0.71i</i></span></td><td>⟨+i| = <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>0.71</i><i>−0.71i</i></span> (the <i>i</i> flips sign)</td></tr></table></div>
+<p>On its own, a bra doesn't do much. It is waiting to meet a ket, which is the next step.</p></section>
+
+<section class="s"><h2>4.4 Bra + ket = bracket ⟨a|b⟩: how alike are two states?</h2>
+<svg class="bk sm" viewBox="0 0 340 100" role="img" aria-label="A bra and a ket sliding together to form a bracket">
+<g class="l"><polyline points="118,20 104,45 118,70"/><text x="134" y="56">a</text><line x1="150" y1="18" x2="150" y2="72"/><text class="tg" x="128" y="94">bra</text></g>
+<g class="r"><line x1="150" y1="18" x2="150" y2="72"/><text x="166" y="56">b</text><polyline points="182,20 196,45 182,70"/><text class="tg" x="172" y="94">ket</text></g>
+<text class="eq" x="210" y="54">= a number</text></svg>
+<p>When a bra meets a ket, their bars merge into one and you get a <b>bracket</b>: <span class="m">⟨a|b⟩</span>. The answer is always a <b>single number</b>. It measures how much the two states overlap:</p>
+<div class="grid"><div class="card"><b>⟨a|b⟩ = 1</b><span>The same state.</span></div><div class="card"><b>⟨a|b⟩ = 0</b><span>Completely different (called <i>orthogonal</i>). A measurement can always tell them apart.</span></div><div class="card"><b>In between</b><span>Partly alike. The overlap squared is a chance.</span></div></div>
+<p><b>How to work it out:</b> it is just "row times column" from Part 3. Multiply the matching numbers and add them up.</p>
+<div class="ex">⟨0|+⟩ = <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>1</i><i>0</i></span> × <span class="mat" style="grid-template-columns:auto"><i>0.71</i><i>0.71</i></span> = 1 × 0.71 + 0 × 0.71 = <b>0.71</b></div>
+<p><b>Why it matters:</b> the overlap squared, <span class="m">|⟨a|b⟩|²</span>, is the <b>chance</b> that a qubit in state b gives the answer "a" when you check for a. Above, 0.71² = 0.5, so |+⟩ gives 0 half the time. This is the measuring rule from Part 3, written in one short line.</p>
+<h3>Try it: the bracket calculator</h3>
+<p>Pick a bra and a ket. The calculator shows the working, the overlap and the chance.</p>
+<div class="two"><label>Bra ⟨a| <select id="bkA"></select></label><label>Ket |b⟩ <select id="bkB"></select></label></div>
+<div class="ex" id="bkOut" aria-live="polite"></div>
+<div class="bar"><i id="bkBar"></i></div></section>
+
+<section data-split="h3" class="s"><h2>4.5 Ket-bra |a⟩⟨b|: building a machine</h2>
+<p>Now put them the other way round: ket first, then bra, <span class="m">|a⟩⟨b|</span>. This time the result is not a number but a <b>matrix</b>, a machine that changes states (Part 3, 3.4).</p>
+<h3>Step 1: what the machine does</h3>
+<p>Watch what happens when the machine meets a ket. The bra on the right "checks" the incoming state, and the ket on the left is what comes out:</p>
+<div class="ex"><b>Recipe:</b> <span class="m">( |a⟩⟨b| ) |ψ⟩ = |a⟩ × ⟨b|ψ⟩</span><br>Read it as: "check how much of b is in ψ, then output that much of a".</div>
+<h3>Step 2: how to build its matrix</h3>
+<p>A ket is a <b>column</b> and a bra is a <b>row</b>. Multiplying a column by a row fills a 2×2 grid. Each box is:</p>
+<p style="text-align:center"><b>(number in that row of the ket) × (number in that column of the bra)</b></p>
+<div class="ex"><b>Example: |1⟩⟨0|.</b> The ket |1⟩ is the column <span class="mat" style="grid-template-columns:auto"><i>0</i><i>1</i></span> and the bra ⟨0| is the row <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>1</i><i>0</i></span>.<br>
+Top row of the grid uses the ket's top number (0): 0×1 = 0, 0×0 = 0.<br>
+Bottom row uses the ket's bottom number (1): 1×1 = 1, 1×0 = 0.<br>
+So |1⟩⟨0| = <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>0</i><i>0</i><i>1</i><i>0</i></span>.</div>
+<p>The same rule gives the four basic building blocks:</p>
+<div class="tw"><table><tr><th>Ket-bra</th><th>Column × row</th><th>Matrix</th><th>What it does</th></tr>
+<tr><td>|0⟩⟨0|</td><td><span class="mat" style="grid-template-columns:auto"><i>1</i><i>0</i></span> × <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>1</i><i>0</i></span></td><td><span class="mat" style="grid-template-columns:repeat(2,auto)"><i>1</i><i>0</i><i>0</i><i>0</i></span></td><td>A <b>filter</b>: keeps the 0 part, throws away the 1 part</td></tr>
+<tr><td>|0⟩⟨1|</td><td><span class="mat" style="grid-template-columns:auto"><i>1</i><i>0</i></span> × <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>0</i><i>1</i></span></td><td><span class="mat" style="grid-template-columns:repeat(2,auto)"><i>0</i><i>1</i><i>0</i><i>0</i></span></td><td>Takes the 1 part and turns it into 0</td></tr>
+<tr><td>|1⟩⟨0|</td><td><span class="mat" style="grid-template-columns:auto"><i>0</i><i>1</i></span> × <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>1</i><i>0</i></span></td><td><span class="mat" style="grid-template-columns:repeat(2,auto)"><i>0</i><i>0</i><i>1</i><i>0</i></span></td><td>Takes the 0 part and turns it into 1</td></tr>
+<tr><td>|1⟩⟨1|</td><td><span class="mat" style="grid-template-columns:auto"><i>0</i><i>1</i></span> × <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>0</i><i>1</i></span></td><td><span class="mat" style="grid-template-columns:repeat(2,auto)"><i>0</i><i>0</i><i>0</i><i>1</i></span></td><td>A filter that keeps only the 1 part</td></tr></table></div>
+<h3>Step 3: adding machines together</h3>
+<p>To add two machines, add their grids <b>box by box</b> (top-left plus top-left, and so on). The new machine does both jobs at once.</p>
+<div class="ex"><b>Swap = |0⟩⟨1| + |1⟩⟨0|.</b><br>
+<span class="mat" style="grid-template-columns:repeat(2,auto)"><i>0</i><i>1</i><i>0</i><i>0</i></span> + <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>0</i><i>0</i><i>1</i><i>0</i></span> = <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>0+0</i><i>1+0</i><i>0+1</i><i>0+0</i></span> = <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>0</i><i>1</i><i>1</i><i>0</i></span><br>
+It turns 1 into 0 <i>and</i> 0 into 1: the <b>swap</b> matrix from Part 3. Check with the recipe: (|0⟩⟨1| + |1⟩⟨0|)|0⟩ = |0⟩×⟨1|0⟩ + |1⟩×⟨0|0⟩ = |0⟩×0 + |1⟩×1 = <b>|1⟩</b>.</div>
+<div class="ex"><b>Identity = |0⟩⟨0| + |1⟩⟨1|.</b><br>
+<span class="mat" style="grid-template-columns:repeat(2,auto)"><i>1</i><i>0</i><i>0</i><i>0</i></span> + <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>0</i><i>0</i><i>0</i><i>1</i></span> = <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>1+0</i><i>0+0</i><i>0+0</i><i>0+1</i></span> = <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>1</i><i>0</i><i>0</i><i>1</i></span><br>
+It keeps the 0 part and keeps the 1 part, so it changes nothing: the <b>identity</b> matrix I from Part 3. Check: (|0⟩⟨0| + |1⟩⟨1|)|1⟩ = |0⟩×0 + |1⟩×1 = <b>|1⟩</b>, unchanged.</div>
+<div class="note">This is a handy trick: you can build any machine by listing "what goes in" (bras) and "what comes out" (kets), then adding the pieces.</div></section>
+
+<section class="s"><h2>4.6 Many qubits</h2>
+<p>For several qubits we just write their values side by side inside one ket. <span class="m">|01⟩</span> means "first qubit 0, second qubit 1". It is short for <span class="m">|0⟩ ⊗ |1⟩</span> (the tensor product from Part 3, 3.6.2).</p>
+<svg class="mq" viewBox="0 0 340 120" role="img" aria-label="Two qubits, 0 and 1, combine into the ket 01" font-family="system-ui">
+<rect x="10" y="30" width="70" height="60" rx="12" fill="none" stroke="var(--a2)" stroke-width="3"/><text x="45" y="70" text-anchor="middle" font-size="26" fill="var(--tx)">|0⟩</text><text x="45" y="20" text-anchor="middle" font-size="13" fill="var(--mu)">qubit 1</text>
+<text x="100" y="68" text-anchor="middle" font-size="22" fill="var(--mu)">⊗</text>
+<rect x="120" y="30" width="70" height="60" rx="12" fill="none" stroke="var(--a2)" stroke-width="3"/><text x="155" y="70" text-anchor="middle" font-size="26" fill="var(--tx)">|1⟩</text><text x="155" y="20" text-anchor="middle" font-size="13" fill="var(--mu)">qubit 2</text>
+<text x="212" y="68" text-anchor="middle" font-size="22" fill="var(--mu)">=</text>
+<rect x="235" y="30" width="95" height="60" rx="12" fill="none" stroke="var(--ac)" stroke-width="3"/><text x="282" y="70" text-anchor="middle" font-size="26" fill="var(--ac)" font-weight="700">|01⟩</text><text x="282" y="110" text-anchor="middle" font-size="13" fill="var(--mu)">one label for both</text></svg>
+<p>Any two-qubit state is a mix of the four possible labels:</p>
+<p style="text-align:center"><span class="m" style="white-space:normal">|ψ⟩ = a|00⟩ + b|01⟩ + c|10⟩ + d|11⟩</span></p>
+<p>Each letter is the amplitude of that result, and the chance of each is its amplitude squared, just like before. The labels are written in binary, so with three qubits you'll see kets like |101⟩.</p>
+<div class="ex"><b>Example: the Bell state.</b> <span class="m">(|00⟩ + |11⟩)/√2</span> says in one line: "50% both 0, 50% both 1, and never a mismatch". Written as a list of numbers it is [0.71, 0, 0, 0.71], which is much harder to read. This is the entangled pair from Part 3 (3.9).</div></section>
+
+<section class="s"><h2>4.7 Sandwiches ⟨ψ|A|ψ⟩: the average result</h2>
+<p>Put a machine between a bra and a ket of the same state and you get a "sandwich": <span class="m">⟨ψ|A|ψ⟩</span>. It gives the <b>average result</b> you would get if you measured A many times on copies of ψ. Its proper name is the <i>expectation value</i>.</p>
+<div class="ex">Use the sign-flip matrix σz from Part 3 (3.5). Its eigenvalues are +1 for |0⟩ and −1 for |1⟩, so think of the results as +1 (read 0) and −1 (read 1). It leaves |0⟩ alone, puts a minus sign on |1⟩, and turns |+⟩ into |−⟩.<br>
+⟨0|σz|0⟩ = ⟨0|0⟩ = <b>+1</b>: always 0, so the average is +1.<br>
+⟨1|σz|1⟩ = ⟨1|(−|1⟩) = <b>−1</b>: always 1, so the average is −1.<br>
+⟨+|σz|+⟩ = ⟨+|−⟩ = <b>0</b>: half +1 and half −1 average out to 0.</div>
+<p>These are exactly the <b>z coordinates</b> on the Bloch sphere (Part 2, 2.5): top +1, bottom −1, equator 0. In the same way, ⟨ψ|σx|ψ⟩ gives the x coordinate and ⟨ψ|σy|ψ⟩ the y coordinate.</p></section>
+
+<section class="s"><h2>4.8 Cheat sheet</h2>
+<div class="tw"><table><tr><th>Symbol</th><th>Read aloud</th><th>What it is</th><th>Plain meaning</th></tr>
+<tr><td>|ψ⟩</td><td>ket psi</td><td>Column of numbers</td><td>A state</td></tr>
+<tr><td>⟨ψ|</td><td>bra psi</td><td>Row of numbers (conjugated)</td><td>The state's mirror image</td></tr>
+<tr><td>⟨a|b⟩</td><td>bracket a b</td><td>One number</td><td>Overlap; squared, it is a chance</td></tr>
+<tr><td>|a⟩⟨b|</td><td>ket a bra b</td><td>A matrix</td><td>Machine: "take b, output a"</td></tr>
+<tr><td>A|ψ⟩</td><td>A acting on psi</td><td>A new ket</td><td>Matrix A changes the state</td></tr>
+<tr><td>|01⟩</td><td>ket zero one</td><td>|0⟩ ⊗ |1⟩</td><td>Several qubits at once</td></tr>
+<tr><td>⟨ψ|A|ψ⟩</td><td>expectation of A</td><td>One number</td><td>Average result of measuring A</td></tr></table></div></section>
+<div class="pn"><a href="part3.html">← Part 3</a><a href="part5.html">Part 5 →</a></div></main></div>
+
+<script src="js/part4.js"></script>
+<script src="js/site.js"></script>
+</body></html>

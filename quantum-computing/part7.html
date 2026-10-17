@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Part 7 · Quantum Algorithms | VQTF Quantum Computing</title>
+<link rel="stylesheet" href="css/style.css">
+</head><body>
+<nav class="top"><a href="index.html">Home</a><a href="part1.html">Part 1 · Introduction</a><a href="part2.html">Part 2 · The Qubit</a><a href="part3.html">Part 3 · Math Foundations</a><a href="part4.html">Part 4 · Dirac Notation</a><a href="part5.html">Part 5 · Quantum Gates</a><a href="part6.html">Part 6 · Quantum Rules</a><a href="part7.html">Part 7 · Algorithms</a></nav>
+
+<div class="pg" id="p-part7">
+<header class="hero">
+<svg class="anim" viewBox="0 0 300 200" role="img" aria-label="Eight bars; one grows tall while the others shrink, like Grover's search finding an answer">
+<line x1="20" y1="170" x2="280" y2="170" stroke="#ffffff" stroke-opacity=".5" stroke-width="2"/>
+<g fill="#7ff5ef"><rect class="gd" x="30" y="90" width="22" height="80" rx="3"/><rect class="gd" x="62" y="90" width="22" height="80" rx="3"/><rect class="gd" x="94" y="90" width="22" height="80" rx="3"/><rect class="gd" x="126" y="90" width="22" height="80" rx="3"/><rect class="gd" x="190" y="90" width="22" height="80" rx="3"/><rect class="gd" x="222" y="90" width="22" height="80" rx="3"/><rect class="gd" x="254" y="90" width="22" height="80" rx="3"/></g>
+<rect class="gu" x="158" y="30" width="22" height="140" rx="3" fill="#ffd36b"/>
+<text x="169" y="22" text-anchor="middle" font-family="system-ui" font-size="14" font-weight="700" fill="#ffd36b">✓</text></svg>
+<h1>Part 7 · Quantum Algorithms</h1><p>Five famous recipes that show how a quantum computer can beat an ordinary one, each worked through with small numbers.</p></header>
+<main>
+
+<section data-split="h3" class="s"><h2>7.1 Key ideas: oracles, kickback and speed-ups</h2>
+<p class="lead">An <b>algorithm</b> is simply a recipe: a list of steps that solves a problem. A <b>quantum algorithm</b> is a recipe made of the gates from Part 5, followed by a measurement (Part 6, 6.6).</p>
+<p>All five algorithms in this part follow the same four-beat rhythm:</p>
+<svg class="pic wide" viewBox="0 0 560 120" role="img" aria-label="Four steps in a row: spread out, ask, interfere, read" font-family="system-ui" font-size="13">
+<g fill="var(--sf)" stroke="var(--ac)" stroke-width="2"><rect x="10" y="20" width="110" height="56" rx="10"/><rect x="152" y="20" width="110" height="56" rx="10"/><rect x="294" y="20" width="110" height="56" rx="10"/><rect x="436" y="20" width="110" height="56" rx="10"/></g>
+<g fill="var(--ac)" font-weight="700" text-anchor="middle"><text x="65" y="44">1. Spread out</text><text x="207" y="44">2. Ask</text><text x="349" y="44">3. Interfere</text><text x="491" y="44">4. Read</text></g>
+<g fill="var(--mu)" font-size="11" text-anchor="middle"><text x="65" y="63">H gates: all inputs</text><text x="207" y="63">the black box, once</text><text x="349" y="63">wrong answers cancel</text><text x="491" y="63">measure</text></g>
+<g stroke="var(--mu)" stroke-width="2"><line x1="122" y1="48" x2="148" y2="48"/><line x1="264" y1="48" x2="290" y2="48"/><line x1="406" y1="48" x2="432" y2="48"/></g>
+<circle class="pulse" cx="140" cy="100" r="6" fill="var(--a2)"/><line x1="140" y1="100" x2="420" y2="100" stroke="var(--bd)" stroke-dasharray="4 4"/></svg>
+<div class="note">Step 1 uses superposition (Part 2) and step 3 uses interference (Part 3, 3.7). The new pieces in this part are the "black box" in step 2 and a few tricks for step 3. This section explains them first, so every algorithm after it reads easily.</div>
+
+<h3>What is a function?</h3>
+<p>A <b>function</b> is a rule that turns an input into an output, like a vending machine: press a button (input) and a snack comes out (output). We write it as <span class="m">f(x)</span>: "the output of the rule f when the input is x".</p>
+<p>In this part every input is a string of bits such as <span class="m">0</span>, <span class="m">01</span> or <span class="m">110</span>, and the output is a bit or a short label.</p>
+<div class="ex"><b>Example.</b> The rule "flip the bit" is <span class="m">f(x) = NOT x</span>. So f(0) = 1 and f(1) = 0. The rule "always say 0" is <span class="m">f(x) = 0</span>: f(0) = 0 and f(1) = 0.</div>
+
+<h3>The oracle (black box)</h3>
+<p>In these puzzles someone hands us a function hidden inside a sealed box. We can't open it to read the rule. We can only feed it an input and see what comes out. Such a box is called an <b>oracle</b> (or <b>black box</b>), like the ancient oracle you could ask questions but never look inside.</p>
+<svg class="pic wide" viewBox="0 0 560 140" role="img" aria-label="An input dot travelling into a black box, with an output coming out the other side" font-family="system-ui" font-size="14">
+<line x1="30" y1="70" x2="530" y2="70" stroke="var(--mu)" stroke-width="2"/>
+<circle class="pulse" cx="40" cy="70" r="9" fill="var(--a2)"/>
+<rect x="200" y="25" width="160" height="90" rx="12" fill="#1b2033" stroke="var(--ac)" stroke-width="2"/>
+<text x="280" y="66" text-anchor="middle" fill="#fff" font-weight="700">f = ?</text><text x="280" y="88" text-anchor="middle" fill="#c9cbe0" font-size="12">sealed: rule hidden</text>
+<text x="40" y="50" text-anchor="middle" fill="var(--tx)">x</text><text x="500" y="50" text-anchor="middle" fill="var(--tx)">f(x)</text>
+<text x="280" y="135" text-anchor="middle" fill="var(--mu)" font-size="12">one trip through the box = one "query"</text></svg>
+<p>Each use of the box is called a <b>query</b>. We judge an algorithm by <b>how many queries it needs</b>. Asking is treated as the expensive part, just as a real lock you are trying to open might only allow a few attempts.</p>
+<h4>How a quantum computer asks</h4>
+<p>Quantum gates must be reversible (Part 5, 5.1), so the quantum oracle can't simply replace x with f(x). Instead it keeps x and adds the answer onto a spare <b>helper qubit</b> using XOR (⊕), the same "flip if 1" move as the CNOT gate (Part 5, 5.9):</p>
+<p class="m lstate">|x⟩|y⟩ → |x⟩|y ⊕ f(x)⟩</p>
+<p>If f(x) = 0 the helper is left alone; if f(x) = 1 the helper is flipped. The quantum box is called <span class="m">U<sub>f</sub></span>. Because x can be a superposition, one query can ask about many inputs at once.</p>
+
+<h3>The kickback trick</h3>
+<p>Here is the trick that makes the first three algorithms work. Put the helper qubit in the state <span class="m">|−⟩ = 0.71|0⟩ − 0.71|1⟩</span> (made by X then H, Part 5, 5.6).</p>
+<div class="two"><div><p><b>If f(x) = 0:</b> the helper is not flipped, so it stays |−⟩.</p>
+<p><b>If f(x) = 1:</b> the helper is flipped. Flipping |−⟩ swaps its two parts: 0.71|1⟩ − 0.71|0⟩, which is exactly <b>−|−⟩</b>. The helper is unchanged, apart from a minus sign in front.</p>
+<p>That minus sign belongs to the whole state, so we can move it onto the input. The helper never changes, and the answer appears as a <b>sign on the input</b>:</p>
+<p class="m lstate">|x⟩|−⟩ → (−1)<sup>f(x)</sup> |x⟩|−⟩</p></div>
+<svg class="pic" viewBox="0 0 300 190" role="img" aria-label="A minus sign hops from the helper wire up onto the input wire" font-family="system-ui" font-size="13">
+<g stroke="var(--tx)" stroke-width="2"><line x1="20" y1="60" x2="290" y2="60"/><line x1="20" y1="130" x2="290" y2="130"/></g>
+<rect x="100" y="35" width="80" height="120" rx="10" fill="var(--sf)" stroke="var(--ac)" stroke-width="2"/><text x="140" y="100" text-anchor="middle" fill="var(--ac)" font-weight="700">U<tspan font-size="10" dy="4">f</tspan></text>
+<text x="14" y="52" fill="var(--tx)">input |x⟩</text><text x="14" y="122" fill="var(--tx)">helper |−⟩</text>
+<text class="kick" x="230" y="138" text-anchor="middle" fill="#e0576b" font-size="26" font-weight="700">−</text>
+<text x="150" y="182" text-anchor="middle" fill="var(--mu)" font-size="12">when f(x) = 1, the − sign "kicks back"</text></svg></div>
+<p>This is called <b>phase kickback</b>. The answer f(x) becomes a phase (a + or − sign, Part 2, 2.2). On its own a sign changes no chances, but signs are exactly what interference (step 3) can turn into a readable answer.</p>
+<div class="ex"><b>Worked numbers.</b> Input |+⟩ = 0.71|0⟩ + 0.71|1⟩, with f(0) = 0 and f(1) = 1. The |0⟩ part keeps its +; the |1⟩ part picks up a −. Result: 0.71|0⟩ − 0.71|1⟩ = |−⟩. One query has stamped both answers onto the input as signs.</div>
+
+<h3>Counting speed-ups</h3>
+<p>To compare recipes we ask: <b>how does the number of steps grow</b> as the problem gets bigger? Here N is the number of possible inputs and n is the number of bits (N = 2<sup>n</sup>, Part 3, 3.8).</p>
+<div class="tw"><table><tr><th>Grows like</th><th>N = 16</th><th>N = 1,000,000</th><th>Name</th></tr>
+<tr><td>N (try them all)</td><td>16</td><td>1,000,000</td><td>Hopeless when N is huge</td></tr>
+<tr><td>√N (square root)</td><td>4</td><td>1,000</td><td>A <b>quadratic</b> speed-up over N</td></tr>
+<tr><td>n (number of bits)</td><td>4</td><td>20</td><td>Tiny. Going from N to n is an <b>exponential</b> speed-up</td></tr></table></div>
+<p>When the work grows like n, n² or n³ we call it <b>polynomial</b>: manageable even for big inputs. When it grows like 2<sup>n</sup> we call it <b>exponential</b>: each extra bit doubles the work, which quickly becomes impossible.</p>
+<div class="note">Keep this table in mind. Grover's algorithm gives a quadratic speed-up; Simon's and Shor's give exponential ones.</div></section>
+
+<section data-split="h3" class="s"><h2>7.2 Deutsch's algorithm: one question instead of two</h2>
+<p class="lead">The first quantum algorithm ever (David Deutsch, 1985). The problem is tiny, but it was the first proof that a quantum computer can do something with fewer queries than any ordinary computer.</p>
+<h3>The puzzle: fair coin or fake coin?</h3>
+<p>A coin is either <b>fair</b> (heads on one side, tails on the other) or <b>fake</b> (the same picture on both sides). How many sides must you look at to tell which?</p>
+<svg class="pic" style="max-width:380px" viewBox="0 0 360 170" role="img" aria-label="Two spinning coins: a fair coin showing heads then tails, a fake coin showing heads on both sides" font-family="system-ui">
+<g class="cf"><g class="f1"><circle cx="90" cy="65" r="44" fill="#ffd36b" stroke="#d9830b" stroke-width="3"/><text x="90" y="76" text-anchor="middle" font-size="30" font-weight="700" fill="#7a4a00">H</text></g><g class="f2"><circle cx="90" cy="65" r="44" fill="#c9d3e8" stroke="#7d8aa8" stroke-width="3"/><text x="90" y="76" text-anchor="middle" font-size="30" font-weight="700" fill="#3a4560">T</text></g></g>
+<g class="cf"><g class="f1"><circle cx="270" cy="65" r="44" fill="#ffd36b" stroke="#d9830b" stroke-width="3"/><text x="270" y="76" text-anchor="middle" font-size="30" font-weight="700" fill="#7a4a00">H</text></g><g class="f2"><circle cx="270" cy="65" r="44" fill="#ffd36b" stroke="#d9830b" stroke-width="3"/><text x="270" y="76" text-anchor="middle" font-size="30" font-weight="700" fill="#7a4a00">H</text></g></g>
+<g text-anchor="middle" font-size="14"><text x="90" y="134" fill="var(--tx)" font-weight="700">Fair coin</text><text x="90" y="154" fill="var(--mu)">sides differ: balanced</text><text x="270" y="134" fill="var(--tx)" font-weight="700">Fake coin</text><text x="270" y="154" fill="var(--mu)">sides match: constant</text></g></svg>
+<p>In bits: a function takes one input bit (side 0 or side 1) and gives one output bit. There are only four possible rules:</p>
+<div class="tw"><table class="tg"><tr><th>Rule</th><th>f(0)</th><th>f(1)</th><th>Type</th></tr>
+<tr><td>f(x) = 0</td><td>0</td><td>0</td><td><b>Constant</b> (same output always)</td></tr>
+<tr><td>f(x) = 1</td><td>1</td><td>1</td><td><b>Constant</b></td></tr>
+<tr><td>f(x) = x</td><td>0</td><td>1</td><td><b>Balanced</b> (half 0s, half 1s)</td></tr>
+<tr><td>f(x) = NOT x</td><td>1</td><td>0</td><td><b>Balanced</b></td></tr></table></div>
+<p>The question: <b>is f constant or balanced?</b> An ordinary computer must ask f(0) <i>and</i> f(1), which is <b>2 queries</b>; one answer alone tells you nothing. Deutsch's algorithm needs <b>1 query</b>.</p>
+
+<h3>The circuit</h3>
+<svg class="cd" viewBox="0 0 520 195" role="img" aria-label="Deutsch circuit: top qubit starts at 0, helper at 1, H on both, the black box, H on the top qubit, then measure the top qubit" font-family="system-ui" font-size="13">
+<g stroke="var(--tx)" stroke-width="2"><line x1="70" y1="50" x2="420" y2="50"/><line x1="70" y1="120" x2="400" y2="120"/></g>
+<g fill="var(--tx)"><text x="62" y="55" text-anchor="end">|0⟩</text><text x="62" y="125" text-anchor="end">|1⟩</text><text x="408" y="125" fill="var(--mu)" font-size="12">helper</text></g>
+<g fill="var(--sf)" stroke="var(--ac)" stroke-width="2"><rect x="110" y="30" width="40" height="40" rx="6"/><rect x="110" y="100" width="40" height="40" rx="6"/><rect x="200" y="25" width="100" height="120" rx="8"/><rect x="340" y="30" width="40" height="40" rx="6"/><rect x="420" y="30" width="44" height="40" rx="6"/></g>
+<g fill="var(--ac)" font-weight="700" font-size="18" text-anchor="middle"><text x="130" y="57">H</text><text x="130" y="127">H</text><text x="360" y="57">H</text><text x="250" y="88">U<tspan font-size="12" dy="4">f</tspan></text></g>
+<g fill="none" stroke="var(--ac)" stroke-width="2"><path d="M429 62 a13 13 0 0 1 26 0"/><line x1="442" y1="62" x2="452" y2="42"/></g>
+<g fill="var(--mu)" font-size="12" text-anchor="middle"><text x="70" y="182">① start</text><text x="130" y="182">② spread</text><text x="250" y="182">③ ask once</text><text x="360" y="182">④ interfere</text><text x="442" y="182">⑤ read</text></g></svg>
+<p>Each box is a gate you already know. The black box <span class="m">U<sub>f</sub></span> for each rule is also built from familiar gates:</p>
+<div class="grid"><div class="card"><b>f(x) = 0</b><span>Do nothing to the helper.</span></div><div class="card"><b>f(x) = 1</b><span>An X on the helper (always flip).</span></div><div class="card"><b>f(x) = x</b><span>A CNOT: flip the helper when the input is 1.</span></div><div class="card"><b>f(x) = NOT x</b><span>A CNOT followed by an X on the helper.</span></div></div>
+
+<h3>Worked example, f(x) = x</h3>
+<p>Let's follow the numbers for the balanced rule f(x) = x (f(0) = 0, f(1) = 1).</p>
+<div class="ex"><p><b>① Start:</b> top qubit |0⟩, helper |1⟩.</p>
+<p><b>② Spread:</b> H on both. Top = |+⟩ = 0.71|0⟩ + 0.71|1⟩ (both inputs at once). Helper = |−⟩, ready for kickback.</p>
+<p><b>③ Ask once:</b> kickback puts the sign (−1)<sup>f(x)</sup> on each part. f(0) = 0, so +0.71|0⟩ stays. f(1) = 1, so the |1⟩ part becomes −0.71|1⟩. Top = 0.71|0⟩ − 0.71|1⟩ = |−⟩.</p>
+<p><b>④ Interfere:</b> H mixes the two parts (Part 3, 3.4): new |0⟩ amount = (0.71 + (−0.71)) × 0.71 = <b>0</b> (they cancel); new |1⟩ amount = (0.71 − (−0.71)) × 0.71 ≈ <b>1</b> (they add up). Top = |1⟩.</p>
+<p><b>⑤ Read:</b> the measurement gives <b>1</b> with 100% certainty, so the function is <b>balanced</b>.</p></div>
+<p>For the constant rule f(x) = 0, nothing is flipped: the top qubit stays |+⟩, H turns it back into |0⟩, and we read <b>0</b>. The full picture:</p>
+<div class="tw"><table class="tg"><tr><th>Rule</th><th>Signs after ③</th><th>Top after ③</th><th>After ④</th><th>Read</th></tr>
+<tr><td>f = 0</td><td>+ +</td><td>|+⟩</td><td>|0⟩</td><td>0: constant</td></tr>
+<tr><td>f = 1</td><td>− −</td><td>−|+⟩</td><td>−|0⟩</td><td>0: constant</td></tr>
+<tr><td>f = x</td><td>+ −</td><td>|−⟩</td><td>|1⟩</td><td>1: balanced</td></tr>
+<tr><td>f = NOT x</td><td>− +</td><td>−|−⟩</td><td>−|1⟩</td><td>1: balanced</td></tr></table></div>
+<div class="note">The minus sign in front of −|0⟩ covers the whole state (a global phase), so it changes nothing we can measure. The trick: we never learn f(0) or f(1) themselves, only whether they are <b>the same or different</b>. That is the only thing we asked for, and one query is enough to get it.</div>
+
+<h3>Try it yourself</h3>
+<p>Choose a hidden rule, then step through the circuit. The bars show the top qubit's amounts of |0⟩ and |1⟩; red bars are negative.</p>
+<div class="lb"><span class="mu">Hidden rule:</span><button data-df="0" class="go">f = 0</button><button data-df="1">f = 1</button><button data-df="x">f = x</button><button data-df="n">f = NOT x</button></div>
+<svg class="cd" style="max-width:460px" id="dCirc" viewBox="0 0 520 195" role="img" aria-label="Deutsch circuit: top qubit starts at 0, helper at 1, H on both, the black box, H on the top qubit, then measure the top qubit" font-family="system-ui" font-size="13">
+<rect id="dHi" x="40" y="12" width="60" height="150" rx="8" fill="var(--ac)" opacity=".13"/>
+<g stroke="var(--tx)" stroke-width="2"><line x1="70" y1="50" x2="420" y2="50"/><line x1="70" y1="120" x2="400" y2="120"/></g>
+<g fill="var(--tx)"><text x="62" y="55" text-anchor="end">|0⟩</text><text x="62" y="125" text-anchor="end">|1⟩</text><text x="408" y="125" fill="var(--mu)" font-size="12">helper</text></g>
+<g fill="var(--sf)" stroke="var(--ac)" stroke-width="2"><rect x="110" y="30" width="40" height="40" rx="6"/><rect x="110" y="100" width="40" height="40" rx="6"/><rect x="200" y="25" width="100" height="120" rx="8"/><rect x="340" y="30" width="40" height="40" rx="6"/><rect x="420" y="30" width="44" height="40" rx="6"/></g>
+<g fill="var(--ac)" font-weight="700" font-size="18" text-anchor="middle"><text x="130" y="57">H</text><text x="130" y="127">H</text><text x="360" y="57">H</text><text x="250" y="88">U<tspan font-size="12" dy="4">f</tspan></text></g>
+<g fill="none" stroke="var(--ac)" stroke-width="2"><path d="M429 62 a13 13 0 0 1 26 0"/><line x1="442" y1="62" x2="452" y2="42"/></g>
+<g fill="var(--mu)" font-size="12" text-anchor="middle"><text x="70" y="182">① start</text><text x="130" y="182">② spread</text><text x="250" y="182">③ ask once</text><text x="360" y="182">④ interfere</text><text x="442" y="182">⑤ read</text></g></svg>
+<svg class="p7c" id="dChart" viewBox="0 0 400 200" role="img" aria-label="Amounts of 0 and 1 in the top qubit"></svg>
+<div class="lb"><button id="dBack">← Back</button><button id="dNext" class="go">Next step →</button><button id="dReset">Reset</button></div>
+<p class="m lstate" id="dE"></p><p id="dTxt"></p></section>
+
+<section data-split="h3" class="s"><h2>7.3 Deutsch–Jozsa: one question instead of many</h2>
+<p class="lead">In 1992 David Deutsch and Richard Jozsa scaled the coin puzzle up from 1 input bit to <b>n</b> input bits. The quantum speed-up grows from "2 queries vs 1" to "thousands vs 1".</p>
+<h3>The bigger puzzle</h3>
+<p>Now f takes an n-bit input (there are 2<sup>n</sup> of them) and outputs 0 or 1. We are <b>promised</b> (told in advance, and can trust it) that f is one of two kinds:</p>
+<div class="grid"><div class="card"><b>Constant</b><span>Every input gives the same output: all 0s or all 1s.</span></div><div class="card"><b>Balanced</b><span>Exactly half the inputs give 0 and half give 1.</span></div></div>
+<p><b>Classically</b>, you might be unlucky: the first half of the inputs you check could all say 0 even for a balanced f. To be <i>certain</i> you must check one more than half: <b>2<sup>n−1</sup> + 1 queries</b>. For n = 10 that is 513 queries; for n = 30 it is over 500 million.</p>
+<p><b>Quantum:</b> always <b>1 query</b>.</p>
+
+<h3>Circuit and reading rule</h3>
+<svg class="cd" viewBox="0 0 520 210" role="img" aria-label="Deutsch-Jozsa circuit: n input qubits at 0 and a helper at 1, H on all, the black box, H on the inputs, then measure the inputs" font-family="system-ui" font-size="13">
+<g stroke="var(--tx)" stroke-width="2"><line x1="70" y1="40" x2="420" y2="40"/><line x1="70" y1="95" x2="420" y2="95"/><line x1="70" y1="160" x2="400" y2="160"/></g>
+<g fill="var(--tx)"><text x="62" y="45" text-anchor="end">|0⟩</text><text x="62" y="100" text-anchor="end">|0⟩</text><text x="62" y="165" text-anchor="end">|1⟩</text><text x="408" y="165" fill="var(--mu)" font-size="12">helper</text><text x="40" y="74" fill="var(--mu)" font-size="18">⋮</text></g>
+<g fill="var(--sf)" stroke="var(--ac)" stroke-width="2"><rect x="110" y="20" width="40" height="40" rx="6"/><rect x="110" y="75" width="40" height="40" rx="6"/><rect x="110" y="140" width="40" height="40" rx="6"/><rect x="200" y="15" width="100" height="170" rx="8"/><rect x="340" y="20" width="40" height="40" rx="6"/><rect x="340" y="75" width="40" height="40" rx="6"/><rect x="420" y="20" width="44" height="40" rx="6"/><rect x="420" y="75" width="44" height="40" rx="6"/></g>
+<g fill="var(--ac)" font-weight="700" font-size="18" text-anchor="middle"><text x="130" y="47">H</text><text x="130" y="102">H</text><text x="130" y="167">H</text><text x="360" y="47">H</text><text x="360" y="102">H</text><text x="250" y="105">U<tspan font-size="12" dy="4">f</tspan></text></g>
+<g fill="none" stroke="var(--ac)" stroke-width="2"><path d="M429 52 a13 13 0 0 1 26 0"/><line x1="442" y1="52" x2="452" y2="32"/><path d="M429 107 a13 13 0 0 1 26 0"/><line x1="442" y1="107" x2="452" y2="87"/></g>
+<text x="290" y="203" text-anchor="middle" fill="var(--mu)" font-size="12">n input qubits on top · the same four beats as Deutsch</text></svg>
+<p>It is the Deutsch circuit with more input qubits. The reading rule:</p>
+<div class="grid"><div class="card"><b>Read all zeros (00…0)</b><span>f is constant.</span></div><div class="card"><b>Read anything else</b><span>f is balanced.</span></div></div>
+<h4>Why it works: an average of signs</h4>
+<p>After the query, each input x carries a sign (−1)<sup>f(x)</sup> thanks to kickback. When the final H gates act, the amount of <span class="m">|00…0⟩</span> works out to be simply <b>the average of all those signs</b>:</p>
+<div class="two"><div class="card"><b>Constant f</b><span>All signs are the same (all + or all −). The average is ±1, so |00…0⟩ comes out with 100% chance.</span></div><div class="card"><b>Balanced f</b><span>Half +, half −. The average is exactly 0: the amounts cancel perfectly, so |00…0⟩ <i>never</i> appears.</span></div></div>
+
+<h3>Worked example with n = 2</h3>
+<p>Take the balanced rule "f = the first bit": f(00) = 0, f(01) = 0, f(10) = 1, f(11) = 1.</p>
+<div class="ex"><p><b>Spread:</b> H on both input qubits gives an equal mix of the four inputs (each amount ½): ½(|00⟩ + |01⟩ + |10⟩ + |11⟩). Helper = |−⟩.</p>
+<p><b>Ask once:</b> inputs with f = 1 get a minus sign: ½(|00⟩ + |01⟩ − |10⟩ − |11⟩).</p>
+<p><b>Spot the pattern:</b> this is the tensor product (Part 3, 3.6.2) |−⟩ ⊗ |+⟩. Check: ½(|0⟩ − |1⟩)(|0⟩ + |1⟩) = ½(|00⟩ + |01⟩ − |10⟩ − |11⟩). ✓</p>
+<p><b>Interfere:</b> H turns |−⟩ into |1⟩ and |+⟩ into |0⟩, so the inputs become |10⟩.</p>
+<p><b>Read:</b> we get <b>10</b>, which is not 00, so f is <b>balanced</b>. ✓</p>
+<p><b>The average check:</b> signs + + − −, average = (1 + 1 − 1 − 1) ÷ 4 = <b>0</b>, so 00 was impossible.</p></div>
+<p>For the constant rule f = 0 the signs are + + + +, the average is 1, and the inputs end as |00⟩ every time.</p>
+
+<h3>Try every 2-bit rule</h3>
+<p>Pick a rule. The top chart shows the signs after the single query; the bottom chart shows the amounts after the final H gates.</p>
+<div class="lb" id="djB"></div>
+<p class="m lstate" id="djT"></p>
+<span class="lbl">After asking once (each input carries a sign)</span>
+<svg class="p7c" id="djC1" viewBox="0 0 400 200" role="img" aria-label="Signed amounts of the four inputs after the query"></svg>
+<span class="lbl">After the final H gates (what we will measure)</span>
+<svg class="p7c" id="djC2" viewBox="0 0 400 200" role="img" aria-label="Amounts of the four outcomes after the final H gates"></svg>
+<p id="djO"></p></section>
+
+<section data-split="h3" class="s"><h2>7.4 Simon's algorithm: finding a hidden pattern</h2>
+<p class="lead">Deutsch–Jozsa needs a "promise" and can be matched by a classical computer that is allowed a tiny chance of error. Daniel Simon (1994) found a problem where the quantum advantage is exponential even then. His idea led directly to Shor's algorithm.</p>
+<h3>XOR and the even-or-odd dot product</h3>
+<h4>XOR on strings</h4>
+<p>You know XOR for single bits from the CNOT gate (Part 5, 5.9): 0⊕0 = 0, 0⊕1 = 1, 1⊕0 = 1, 1⊕1 = 0 ("1 if different"). For bit strings we just XOR each column:</p>
+<p class="m lstate">  101<br>⊕ 110<br>= 011</p>
+<h4>Dot product, even or odd</h4>
+<p>For two bit strings y and s, <span class="m">y · s</span> means: count the columns where <b>both</b> have a 1, then keep only whether that count is <b>even (0)</b> or <b>odd (1)</b>. Keeping only "even or odd" is written <b>mod 2</b>; we will meet "mod" properly in Shor's algorithm.</p>
+<div class="ex"><b>Example.</b> y = 111, s = 110: columns 1 and 2 both have 1s, so the count is 2, which is even, so <span class="m">y · s = 0</span>.<br>y = 011, s = 110: only column 2, a count of 1, odd, so <span class="m">y · s = 1</span>.</div>
+
+<h3>The puzzle: a secret string s</h3>
+<p>A black box f takes a 3-bit input. Inside is a secret string <b>s</b> (not 000). The promise: two inputs give the same output <b>exactly when they differ by s</b>, that is, f(x) = f(x ⊕ s). So the inputs come in matching pairs. This is called a <b>two-to-one</b> function. <b>Goal: find s.</b></p>
+<p>Here is a box with secret s = 110 (the outputs are just labels):</p>
+<div class="ft"><span class="kA">000 → A</span><span class="kA">110 → A</span><span class="kB">001 → B</span><span class="kB">111 → B</span><span class="kC">010 → C</span><span class="kC">100 → C</span><span class="kD">011 → D</span><span class="kD">101 → D</span></div>
+<p>Check one pair: 010 ⊕ 110 = 100, and both give C. ✓</p>
+<p><b>Classically</b> you must keep asking until two inputs give the same label; then s = the XOR of those two inputs. With n bits that takes about √(2<sup>n</sup>) queries on average. For n = 100 that is around 10<sup>15</sup> queries.</p>
+<p><b>Quantum:</b> about <b>n</b> runs of a circuit, so around 100 for n = 100.</p>
+
+<h3>The circuit: each run gives one clue</h3>
+<svg class="cd" viewBox="0 0 520 170" role="img" aria-label="Simon circuit: an input register gets H gates, the black box writes f(x) into an output register, the output is measured, H gates again on the input, then the input is measured" font-family="system-ui" font-size="13">
+<g stroke="var(--tx)" stroke-width="4"><line x1="80" y1="45" x2="440" y2="45"/><line x1="80" y1="120" x2="350" y2="120"/></g>
+<g stroke="var(--tx)" stroke-width="1.5"><line x1="92" y1="37" x2="100" y2="53"/><line x1="92" y1="112" x2="100" y2="128"/></g>
+<g fill="var(--tx)"><text x="72" y="50" text-anchor="end">|000⟩</text><text x="72" y="125" text-anchor="end">|000⟩</text><text x="96" y="30" text-anchor="middle" font-size="11">n</text><text x="96" y="106" text-anchor="middle" font-size="11">n</text></g>
+<g fill="var(--sf)" stroke="var(--ac)" stroke-width="2"><rect x="120" y="25" width="40" height="40" rx="6"/><rect x="200" y="20" width="90" height="120" rx="8"/><rect x="310" y="100" width="44" height="40" rx="6"/><rect x="380" y="25" width="40" height="40" rx="6"/><rect x="440" y="25" width="44" height="40" rx="6"/></g>
+<g fill="var(--ac)" font-weight="700" font-size="18" text-anchor="middle"><text x="140" y="52">H</text><text x="400" y="52">H</text><text x="245" y="86">U<tspan font-size="12" dy="4">f</tspan></text></g>
+<g fill="none" stroke="var(--ac)" stroke-width="2"><path d="M319 132 a13 13 0 0 1 26 0"/><line x1="332" y1="132" x2="342" y2="112"/><path d="M449 57 a13 13 0 0 1 26 0"/><line x1="462" y1="57" x2="472" y2="37"/></g>
+<g fill="var(--mu)" font-size="12" text-anchor="middle"><text x="140" y="85">spread</text><text x="240" y="158">writes f(x)</text><text x="332" y="158">peek at output</text><text x="400" y="85">interfere</text><text x="462" y="85">clue y</text></g></svg>
+<p>A thick line with a slash marks a <b>register</b> of n qubits (Part 6, 6.4). This time the box writes the label f(x) into a second register instead of using kickback.</p>
+<ol><li><b>Spread:</b> H on the input register gives an equal mix of all 8 inputs.</li>
+<li><b>Ask once:</b> every input gets its label written next to it, all at once.</li>
+<li><b>Peek at the output:</b> measuring the label (say we see <b>C</b>) leaves only the inputs with that label (Part 6, 6.6): <span class="m" style="white-space:normal">0.71|010⟩ + 0.71|100⟩</span>. They are a matching pair, so they differ by s.</li>
+<li><b>Interfere:</b> H on the input register. The outcomes y with y · s = 1 cancel out; the ones with y · s = 0 survive.</li>
+<li><b>Read:</b> we get a random <b>clue</b> y that always satisfies <b>y · s = 0</b>.</li></ol>
+
+<h3>Worked example, s = 110</h3>
+<p>After step 3 the inputs are 0.71|010⟩ + 0.71|100⟩. The final H gates send each input to every outcome y with a sign: (−1)<sup>010·y</sup> from the first input and (−1)<sup>100·y</sup> from the second. If the two signs match they add up (25% chance); if they differ they cancel (0%):</p>
+<div class="tw"><table class="tg"><tr><th>y</th><th>010·y</th><th>100·y</th><th>Signs</th><th>Chance</th><th>y·110</th></tr>
+<tr><td>000</td><td>0</td><td>0</td><td>+ +, add</td><td><b>25%</b></td><td>0</td></tr>
+<tr><td>001</td><td>0</td><td>0</td><td>+ +, add</td><td><b>25%</b></td><td>0</td></tr>
+<tr><td>010</td><td>1</td><td>0</td><td>− +, cancel</td><td>0%</td><td>1</td></tr>
+<tr><td>011</td><td>1</td><td>0</td><td>− +, cancel</td><td>0%</td><td>1</td></tr>
+<tr><td>100</td><td>0</td><td>1</td><td>+ −, cancel</td><td>0%</td><td>1</td></tr>
+<tr><td>101</td><td>0</td><td>1</td><td>+ −, cancel</td><td>0%</td><td>1</td></tr>
+<tr><td>110</td><td>1</td><td>1</td><td>− −, add</td><td><b>25%</b></td><td>0</td></tr>
+<tr><td>111</td><td>1</td><td>1</td><td>− −, add</td><td><b>25%</b></td><td>0</td></tr></table></div>
+<p>Only clues with y · s = 0 ever appear. Now solve, using s = s₁s₂s₃:</p>
+<div class="ex"><p>Run 1 gives <b>y = 001</b>: only s₃ is counted, so s₃ must be even: <b>s₃ = 0</b>.</p>
+<p>Run 2 gives <b>y = 111</b>: s₁ + s₂ + s₃ is even. With s₃ = 0, s₁ and s₂ must be equal: both 0 or both 1.</p>
+<p>s can't be 000, so <b>s = 110</b>. ✓ Two useful clues were enough. (A clue of 000 tells us nothing, so we just run again.)</p></div>
+<div class="note">In general n − 1 different useful clues pin down s, so about n runs are needed. The classical approach needs about √(2<sup>n</sup>). That is an exponential speed-up.</div>
+
+<h3>Hunt for the secret</h3>
+<p>Pick a secret, then run the circuit. Each run gives a clue y, and the list of secrets still possible shrinks.</p>
+<div class="lb"><span class="mu">Secret s:</span><button data-ss="6" class="go">110</button><button data-ss="3">011</button><button data-ss="5">101</button><button data-ss="7">111</button></div>
+<div class="ft" id="ssT"></div>
+<div class="lb"><button id="ssRun" class="go">Run the circuit once</button><button id="ssReset">Start over</button></div>
+<p id="ssList" class="m lstate"></p><p id="ssCand"></p></section>
+
+<section data-split="h3" class="s"><h2>7.5 Shor's algorithm: breaking big numbers into factors</h2>
+<p class="lead">Peter Shor's 1994 algorithm is the most famous quantum algorithm, because it could break the codes that protect today's internet. This is the reason post-quantum cryptography exists.</p>
+<h3>Why factoring matters</h3>
+<p>A <b>prime</b> is a whole number that only divides by 1 and itself: 2, 3, 5, 7, 11, 13… <b>Factoring</b> means splitting a number into the primes that multiply to make it: 15 = 3 × 5.</p>
+<div class="two"><div class="card"><b>Multiplying is easy</b><span>61 × 53 = 3233. A computer does this for numbers with hundreds of digits in a split second.</span></div><div class="card"><b>Factoring is hard</b><span>Given 3233, find the two primes. For a number with 600 digits, the best known classical methods would take longer than the age of the universe.</span></div></div>
+<p><b>RSA</b>, a widely used encryption method, relies on this one-way difficulty. Your browser receives a public number N = p × q. Anyone can use N to lock a message, but only someone who knows p and q can unlock it. Find p and q and the lock is broken.</p>
+<div class="note">Shor's algorithm factors N in a number of steps that grows only polynomially (roughly n³ for an n-digit number, see 7.1). That is why we need new, <b>post-quantum</b> locks.</div>
+
+<h3>Clock arithmetic (mod)</h3>
+<p>On a 12-hour clock, 5 hours after 10 o'clock is 3 o'clock, not 15. Numbers "wrap around" when they reach 12. This is <b>modular arithmetic</b>: <span class="m">a mod N</span> means the remainder after dividing a by N.</p>
+<div class="ex"><b>Examples.</b> 15 mod 12 = 3 (since 15 = 12 + 3). 49 mod 15 = 4 (since 49 = 3 × 15 + 4). 91 mod 15 = 1 (since 91 = 6 × 15 + 1).</div>
+<h4>Powers on a clock repeat</h4>
+<p>Take a number a and keep multiplying by it, wrapping around a clock of size N. With a = 7 and N = 15:</p>
+<div class="tw"><table class="tg"><tr><th>x</th><th>0</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th></tr>
+<tr><td>7<sup>x</sup> mod 15</td><td>1</td><td>7</td><td>4</td><td>13</td><td><b>1</b></td><td>7</td><td>4</td></tr></table></div>
+<p>(7 × 7 = 49 → 4; 4 × 7 = 28 → 13; 13 × 7 = 91 → 1.) The pattern repeats every 4 steps. That repeat length is called the <b>period</b>, written <b>r</b>. Here r = 4.</p>
+
+<h3>The power clock</h3>
+<p>Pick N and a, then hop around the clock. Each hop multiplies by a. The path closes into a loop whose number of corners is the period r.</p>
+<div class="lb"><span class="mu">N =</span><button data-sn="15" class="go">15</button><button data-sn="21">21</button></div>
+<div class="lb" id="shAB"></div>
+<svg class="pic" id="shClock" viewBox="-150 -150 300 300" role="img" aria-label="A clock with N positions; a dot hops by multiplying by a each time"></svg>
+<div class="lb"><button id="shNext" class="go">Hop (× a)</button><button id="shPlay">Play</button><button id="shReset">Reset</button></div>
+<p class="m lstate" id="shSeq"></p><p id="shOut"></p>
+
+<h3>From the period to the factors</h3>
+<p>We need one more term. The <b>greatest common divisor</b>, <b>gcd(a, b)</b>, is the biggest number that divides both a and b. For example gcd(12, 15) = 3 and gcd(20, 15) = 5. Computers find a gcd very quickly with Euclid's 2,300-year-old method, even for huge numbers.</p>
+<p>Here's the recipe once the period r is known (r must be even):</p>
+<div class="ex"><p><b>N = 15, a = 7, r = 4.</b></p>
+<p>1. Compute x = a<sup>r/2</sup> mod N = 7² mod 15 = 49 mod 15 = <b>4</b>.</p>
+<p>2. Because a<sup>r</sup> wraps to 1, x² − 1 = (x − 1)(x + 1) is a multiple of N. Here 4² − 1 = 15 = 3 × 5. ✓</p>
+<p>3. So N shares factors with x − 1 and x + 1: gcd(4 − 1, 15) = gcd(3, 15) = <b>3</b> and gcd(4 + 1, 15) = gcd(5, 15) = <b>5</b>.</p>
+<p>4. Check: 3 × 5 = 15. ✓ Factored!</p></div>
+<p>Sometimes a choice of a gives an odd r, or x ends up as N − 1 (try a = 14 with N = 15 in the clock above). Then we simply pick another a and try again; a good a turns up quickly.</p>
+<div class="note">Everything here is easy for an ordinary computer <b>except finding r</b>. For a 600-digit N the period can be astronomically long, so hopping around the clock would never finish. Finding r is the only job the quantum computer does.</div>
+
+<h3>The quantum part: finding the period</h3>
+<svg class="cd" viewBox="0 0 520 170" role="img" aria-label="Shor's period-finding circuit: H gates on the x register, compute a to the x mod N into a second register, measure it, then a quantum Fourier transform on the x register and measure" font-family="system-ui" font-size="13">
+<g stroke="var(--tx)" stroke-width="4"><line x1="80" y1="45" x2="440" y2="45"/><line x1="80" y1="120" x2="350" y2="120"/></g>
+<g fill="var(--tx)"><text x="72" y="50" text-anchor="end">x: |0⟩</text><text x="72" y="125" text-anchor="end">|0⟩</text></g>
+<g fill="var(--sf)" stroke="var(--ac)" stroke-width="2"><rect x="110" y="25" width="40" height="40" rx="6"/><rect x="180" y="20" width="110" height="120" rx="8"/><rect x="310" y="100" width="44" height="40" rx="6"/><rect x="372" y="25" width="56" height="40" rx="6"/><rect x="448" y="25" width="44" height="40" rx="6"/></g>
+<g fill="var(--ac)" font-weight="700" text-anchor="middle"><text x="130" y="52" font-size="18">H</text><text x="400" y="51" font-size="15">QFT</text><text x="235" y="78" font-size="14">a<tspan font-size="10" dy="-6">x</tspan><tspan dy="6"> mod N</tspan></text></g>
+<g fill="none" stroke="var(--ac)" stroke-width="2"><path d="M319 132 a13 13 0 0 1 26 0"/><line x1="332" y1="132" x2="342" y2="112"/><path d="M457 57 a13 13 0 0 1 26 0"/><line x1="470" y1="57" x2="480" y2="37"/></g>
+<g fill="var(--mu)" font-size="12" text-anchor="middle"><text x="130" y="85">all x at once</text><text x="235" y="158">every power at once</text><text x="400" y="85">rhythm finder</text></g></svg>
+<p>The same shape as Simon's circuit, with two changes: the box computes <span class="m">a<sup>x</sup> mod N</span>, and the final H gates are replaced by the <b>Quantum Fourier Transform (QFT)</b>, first mentioned in Part 5 (5.7).</p>
+<h4>What the QFT does</h4>
+<p>Think of a music app that listens to a drum and tells you the beat. The QFT does that for amplitudes: give it a pattern that repeats every r steps, and it produces sharp <b>peaks</b> at evenly spaced places that reveal r. Inside, it is built from H gates and small phase turns (like S and T, Part 5) that make the non-matching rhythms cancel by interference.</p>
+
+<h3>Worked example, N = 15</h3>
+<p>Use a 4-qubit x register, so x runs over Q = 16 values (0 to 15).</p>
+<div class="ex"><p><b>Spread:</b> all 16 values of x equally (chance 1/16 each).</p>
+<p><b>Compute:</b> next to each x, the box writes 7<sup>x</sup> mod 15: 1, 7, 4, 13, 1, 7, 4, 13, …</p>
+<p><b>Peek:</b> measure the second register. Say we see <b>4</b>. Only the x values that give 4 remain: <b>x = 2, 6, 10, 14</b>, each 25%. They are spaced exactly r = 4 apart, like a comb. But measuring x now would give one random tooth, which is useless on its own.</p>
+<p><b>QFT:</b> the comb with spacing 4 turns into peaks at multiples of Q ÷ r = 16 ÷ 4 = 4: <b>y = 0, 4, 8, 12</b>, each 25%.</p>
+<p><b>Read and work out r:</b> say we read y = 12. Then y ÷ Q = 12/16 = <b>3/4</b>, and the bottom of the fraction gives <b>r = 4</b>. Check: 7⁴ mod 15 = 2401 mod 15 = 1. ✓</p></div>
+<p>If we read y = 4 we get 1/4, which also works. y = 8 gives 2/4 = 1/2, suggesting r = 2, but 7² mod 15 = 4, not 1, so we run again. y = 0 tells us nothing. So each run succeeds about half the time, and a few runs are enough. (For big numbers, a method called <b>continued fractions</b> reads the fraction.)</p>
+
+<h3>From comb to peaks</h3>
+<p>N = 15, a = 7, with 16 values of x. Press the buttons in order and watch the chances.</p>
+<svg class="p7c" id="shBC" viewBox="0 0 400 200" role="img" aria-label="Chances of each value of x from 0 to 15"></svg>
+<div class="lb"><button id="shB1" class="go">1. Peek at a<sup>x</sup> mod N</button><button id="shB2">2. Apply QFT</button><button id="shB3">3. Read x</button><button id="shBR">Reset</button></div>
+<p id="shBO"></p>
+
+<h3>How close are we?</h3>
+<div class="grid"><div class="card"><b>Done so far</b><span>Small demos have factored 15 and 21 on real quantum chips, using shortcuts that already knew part of the answer.</span></div><div class="card"><b>What breaking RSA needs</b><span>Estimates published in 2025 suggest roughly a million good-quality qubits running for about a week for 2048-bit RSA. Today's machines are much smaller and noisier.</span></div><div class="card"><b>Why act now</b><span>Secrets recorded today could be decrypted later ("harvest now, decrypt later"). So new post-quantum locks are being rolled out already.</span></div></div></section>
+
+<section data-split="h3" class="s"><h2>7.6 Grover's algorithm: finding a needle in a haystack</h2>
+<p class="lead">Lov Grover's 1996 algorithm searches an unsorted list. Its speed-up is smaller than Shor's but it works on almost any search problem.</p>
+<h3>The puzzle: unstructured search</h3>
+<p>Imagine N locked boxes and one hidden prize. A black box tells you "yes" or "no" for any box you ask about. The list has no order or clue to help you: this is <b>unstructured search</b>.</p>
+<div class="grid"><div class="card"><b>Classical</b><span>Check boxes one by one: on average N/2 queries, and N in the worst case. With a million boxes, about 500,000 queries.</span></div><div class="card"><b>Grover</b><span>About 0.785 × √N queries. With a million boxes, about 785 queries.</span></div></div>
+<p>That is the quadratic speed-up from 7.1. Many hard problems (finding a password, solving a puzzle, checking a schedule) can be phrased as "search for the input the checker says yes to".</p>
+
+<h3>Mark, then reflect</h3>
+<p>Start with H on every qubit: all N boxes in an equal mix (Part 6, 6.4). Then repeat two moves.</p>
+<h4>Move 1: the oracle marks the answer</h4>
+<p>The oracle flips the <b>sign</b> of the correct box's amplitude, just like the Z gate "marks answers" (Part 5, 5.4), using the kickback trick from 7.1. On its own this changes no chances: a negative amplitude gives the same chance as a positive one.</p>
+<h4>Move 2: reflect about the average (the diffuser)</h4>
+<p>Next, every amplitude is <b>mirrored around the average</b> of all the amplitudes: <span class="m">new = 2 × average − old</span>. Values just above the average end up just below it, and the one far below the average (the marked box) is thrown far above it. This step is called the <b>diffuser</b> or <b>inversion about the mean</b>, and it is built from H gates and one sign flip.</p>
+<div class="two"><svg class="pic" viewBox="0 0 280 190" role="img" aria-label="Bars after marking: 0.5, 0.5, minus 0.5, 0.5, with the average line at 0.25" font-family="system-ui" font-size="13"><line x1="20" y1="110" x2="260" y2="110" stroke="var(--mu)"/><rect x="30" y="70" width="34" height="40" fill="var(--ac)"/><rect x="80" y="70" width="34" height="40" fill="var(--ac)"/><rect x="130" y="110" width="34" height="40" fill="#e0576b"/><rect x="180" y="70" width="34" height="40" fill="var(--ac)"/><line x1="20" y1="90" x2="222" y2="90" stroke="#d9830b" stroke-width="2" stroke-dasharray="6 4"/><text x="226" y="94" fill="#d9830b" font-size="12">average</text><text x="140" y="180" text-anchor="middle" fill="var(--tx)">1. After marking: 0.5, 0.5, −0.5, 0.5</text></svg><svg class="pic" viewBox="0 0 280 190" role="img" aria-label="Bars after reflecting: 0, 0, 1, 0" font-family="system-ui" font-size="13"><line x1="20" y1="110" x2="260" y2="110" stroke="var(--mu)"/><rect x="30" y="108" width="34" height="2" fill="var(--ac)" opacity=".4"/><rect x="80" y="108" width="34" height="2" fill="var(--ac)" opacity=".4"/><rect x="130" y="30" width="34" height="80" fill="var(--ac)"/><rect x="180" y="108" width="34" height="2" fill="var(--ac)" opacity=".4"/><line x1="20" y1="90" x2="222" y2="90" stroke="#d9830b" stroke-width="2" stroke-dasharray="6 4"/><text x="226" y="94" fill="#d9830b" font-size="12">average</text><text x="140" y="180" text-anchor="middle" fill="var(--tx)">2. After reflecting: 0, 0, 1, 0</text></svg></div>
+<p>Each mark-and-reflect round pours a little more amplitude into the marked box. This is called <b>amplitude amplification</b>.</p>
+
+<h3>Worked example, N = 4</h3>
+<p>Two qubits, four boxes: 00, 01, 10, 11. The prize is in box <b>10</b>.</p>
+<div class="tw"><table class="tg"><tr><th>Step</th><th>00</th><th>01</th><th>10</th><th>11</th><th>Average</th></tr>
+<tr><td>Start (H on both)</td><td>0.5</td><td>0.5</td><td>0.5</td><td>0.5</td><td>0.5</td></tr>
+<tr><td>Oracle marks 10</td><td>0.5</td><td>0.5</td><td><b>−0.5</b></td><td>0.5</td><td>0.25</td></tr>
+<tr><td>Reflect: 2 × 0.25 − old</td><td>0</td><td>0</td><td><b>1</b></td><td>0</td><td></td></tr></table></div>
+<p>For 0.5: 2 × 0.25 − 0.5 = 0. For −0.5: 2 × 0.25 − (−0.5) = 1. After <b>one</b> round the prize box has amplitude 1, a <b>100%</b> chance. A classical search would need up to 3 queries.</p>
+
+<h3>Worked example, N = 8</h3>
+<p>Why not to overdo it? Three qubits, eight boxes, start amplitude 1/√8 ≈ 0.354 each (chance 12.5%).</p>
+<div class="tw"><table class="tg"><tr><th>Round</th><th>Marked box</th><th>Each other box</th><th>Chance of the prize</th></tr>
+<tr><td>0</td><td>0.354</td><td>0.354</td><td>12.5%</td></tr>
+<tr><td>1</td><td>0.884</td><td>0.177</td><td>78.1%</td></tr>
+<tr><td>2</td><td><b>0.972</b></td><td>−0.088</td><td><b>94.5%</b></td></tr>
+<tr><td>3</td><td>0.574</td><td>−0.309</td><td>33.0%</td></tr></table></div>
+<div class="ex"><b>Round 1 in detail.</b> Mark: the prize becomes −0.354. Average = (7 × 0.354 − 0.354) ÷ 8 = 0.265. Reflect: prize = 2 × 0.265 + 0.354 = 0.884; others = 2 × 0.265 − 0.354 = 0.177. Chance = 0.884² = 78.1%.</div>
+<p>After round 2 the chance peaks at 94.5%. A third round <b>overshoots</b> and the chance falls. The best number of rounds is about 0.785 × √N: 1 for N = 4, 2 for N = 8, 3 for N = 16, and 785 for a million.</p>
+
+<h3>Try Grover's search</h3>
+<p>Choose the number of boxes and tap a bar to hide the prize there. Then apply the two moves and watch the prize's bar grow. The dashed line is the average.</p>
+<div class="lb"><span class="mu">Boxes N =</span><button data-gn="4">4</button><button data-gn="8" class="go">8</button><button data-gn="16">16</button></div>
+<svg class="p7c" id="grC" viewBox="0 0 400 200" role="img" aria-label="Amplitude of each box; tap a bar to choose the prize"></svg>
+<div class="lb"><button id="grO">1. Mark (oracle)</button><button id="grD">2. Reflect about average</button><button id="grR" class="go">Full round</button><button id="grM">Measure</button><button id="grX">Reset</button></div>
+<p id="grS"></p>
+<div class="note"><b>Grover and cryptography.</b> Guessing a secret key is a search problem, so Grover's algorithm makes key-guessing quadratically faster: a 128-bit key behaves like a 64-bit one. The fix is easy: use longer keys, such as 256-bit AES. Shor's algorithm is the real threat, because no longer key saves RSA.</div></section>
+
+<section class="s"><h2>7.7 Summary: the five algorithms side by side</h2>
+<div class="tw"><table><tr><th>Algorithm</th><th>Question</th><th>Classical</th><th>Quantum</th><th>Speed-up</th></tr>
+<tr><td><b>Deutsch</b> (1985)</td><td>Is a 1-bit f constant or balanced?</td><td>2 queries</td><td>1 query</td><td>2 → 1</td></tr>
+<tr><td><b>Deutsch–Jozsa</b> (1992)</td><td>Is an n-bit f constant or balanced?</td><td>2<sup>n−1</sup> + 1 (to be certain)</td><td>1 query</td><td>Exponential</td></tr>
+<tr><td><b>Simon</b> (1994)</td><td>What is the hidden XOR pattern s?</td><td>about √(2<sup>n</sup>)</td><td>about n runs</td><td>Exponential</td></tr>
+<tr><td><b>Shor</b> (1994)</td><td>What are the prime factors of N?</td><td>Grows faster than any polynomial</td><td>roughly n³ steps</td><td>Exponential (breaks RSA)</td></tr>
+<tr><td><b>Grover</b> (1996)</td><td>Which of N items is marked?</td><td>about N/2</td><td>about 0.785√N</td><td>Quadratic</td></tr></table></div>
+<div class="grid"><div class="card"><b>Superposition</b><span>H gates put every input in play at once.</span></div><div class="card"><b>Oracle and kickback</b><span>One query stamps every answer onto the state, often as a + or − sign.</span></div><div class="card"><b>Interference</b><span>H gates, the QFT or the diffuser make wrong answers cancel and right ones add up.</span></div><div class="card"><b>Measurement</b><span>One reading, and an ordinary computer finishes off (solve clues, compute a gcd).</span></div></div>
+<div class="note">Notice that no algorithm simply "tries every answer and reads the best one". Measurement gives only one result, so the magic is always in arranging interference. How quantum physics itself can protect secrets, and the new post-quantum locks, are covered in the companion course <a href="../pqc/index.html" target="_blank" rel="noopener">VQTF PQC and Quantum Cryptography</a>.</div>
+</section>
+<div class="pn"><a href="part6.html">← Part 6</a><a href="index.html">Contents</a></div></main></div>
+
+<script src="js/part7.js"></script>
+<script src="js/site.js"></script>
+</body></html>

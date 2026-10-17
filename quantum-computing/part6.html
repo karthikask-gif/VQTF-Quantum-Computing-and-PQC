@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Part 6 · The Rules of the Quantum World | VQTF Quantum Computing</title>
+<link rel="stylesheet" href="css/style.css">
+</head><body>
+<nav class="top"><a href="index.html">Home</a><a href="part1.html">Part 1 · Introduction</a><a href="part2.html">Part 2 · The Qubit</a><a href="part3.html">Part 3 · Math Foundations</a><a href="part4.html">Part 4 · Dirac Notation</a><a href="part5.html">Part 5 · Quantum Gates</a><a href="part6.html">Part 6 · Quantum Rules</a><a href="part7.html">Part 7 · Algorithms</a></nav>
+
+<div class="pg" id="p-part6">
+<header class="hero">
+<svg class="anim" viewBox="0 0 300 200" role="img" aria-label="Two entangled particles flying apart while staying linked">
+<path class="ent" d="M150 100 Q 120 70 90 100 T 30 100" fill="none" stroke="#7ff5ef" stroke-width="2" stroke-dasharray="5 5"/>
+<path class="ent" d="M150 100 Q 180 130 210 100 T 270 100" fill="none" stroke="#7ff5ef" stroke-width="2" stroke-dasharray="5 5"/>
+<g class="pa"><circle cx="150" cy="100" r="14" fill="#ffd36b"/><text x="150" y="105" text-anchor="middle" font-family="system-ui" font-size="13" font-weight="700" fill="#2a1f8f">A</text></g>
+<g class="pb"><circle cx="150" cy="100" r="14" fill="#ff9ad5"/><text x="150" y="105" text-anchor="middle" font-family="system-ui" font-size="13" font-weight="700" fill="#2a1f8f">B</text></g></svg>
+<h1>Part 6 · The Rules of the Quantum World</h1><p>Where quantum states live, the four rules they obey, and how we change and read them.</p></header>
+<main>
+
+<section class="s"><h2>6.1 Hilbert space: where quantum states live</h2>
+<p>Every game needs a board. In quantum computing the "board" is called <b>Hilbert space</b> (named after the mathematician David Hilbert). It is simply <b>the collection of every possible state</b> a quantum system can be in.</p>
+<p>You have already been using it. In Part 3 a qubit's state was an arrow, [α, β]. Hilbert space is the space all those arrows live in. It is like a room where each direction you can point is a different state.</p>
+<div class="two"><svg class="pic" viewBox="-130 -130 260 260" role="img" aria-label="An arrow of length one sweeping around a circle; every position is a valid state">
+<circle r="100" fill="none" stroke="var(--bd)" stroke-width="2" stroke-dasharray="4 4"/><line x1="-120" y1="0" x2="120" y2="0" stroke="var(--mu)"/><line x1="0" y1="-120" x2="0" y2="120" stroke="var(--mu)"/>
+<text x="108" y="-8" text-anchor="end" fill="var(--mu)" font-size="14">|0⟩</text><text x="8" y="-108" fill="var(--mu)" font-size="14">|1⟩</text>
+<g class="sweep"><line x1="0" y1="0" x2="100" y2="0" stroke="var(--ac)" stroke-width="5" stroke-linecap="round"/><circle cx="100" cy="0" r="7" fill="var(--ac)"/></g>
+<text x="0" y="125" text-anchor="middle" fill="var(--mu)" font-size="12">every arrow of length 1 is a valid state</text></svg>
+<div><h4>What makes it a Hilbert space?</h4><p>Three simple things you can do with the arrows:</p>
+<ul><li><b>Add them</b> and stretch them: that is how we make mixes like α|0⟩ + β|1⟩ (superposition).</li>
+<li><b>Measure their overlap</b> with the inner product ⟨a|b⟩ (Part 3, 3.6.1). This gives lengths and angles, and with them chances.</li>
+<li><b>No gaps:</b> every in-between arrow you can imagine is also in the space.</li></ul>
+<p>A valid state is an arrow of <b>length exactly 1</b>, because its chances must add up to 100%.</p></div></div>
+<h4>How big is it?</h4>
+<p>The size of a Hilbert space is its number of independent directions, called its <b>dimension</b>. Each extra qubit doubles it:</p>
+<svg class="pic wide" viewBox="0 0 520 120" role="img" aria-label="Boxes doubling: 2 for one qubit, 4 for two qubits, 8 for three qubits" font-family="system-ui" font-size="12">
+<g fill="var(--a2)" opacity=".85"><rect x="10" y="40" width="22" height="22" rx="4"/><rect x="36" y="40" width="22" height="22" rx="4"/></g><text x="34" y="90" text-anchor="middle" fill="var(--tx)">1 qubit: 2</text>
+<g fill="var(--a2)" opacity=".85"><rect x="100" y="40" width="22" height="22" rx="4"/><rect x="126" y="40" width="22" height="22" rx="4"/><rect x="152" y="40" width="22" height="22" rx="4"/><rect x="178" y="40" width="22" height="22" rx="4"/></g><text x="150" y="90" text-anchor="middle" fill="var(--tx)">2 qubits: 4</text>
+<g fill="var(--a2)" opacity=".85"><rect x="240" y="40" width="22" height="22" rx="4"/><rect x="266" y="40" width="22" height="22" rx="4"/><rect x="292" y="40" width="22" height="22" rx="4"/><rect x="318" y="40" width="22" height="22" rx="4"/><rect x="344" y="40" width="22" height="22" rx="4"/><rect x="370" y="40" width="22" height="22" rx="4"/><rect x="396" y="40" width="22" height="22" rx="4"/><rect x="422" y="40" width="22" height="22" rx="4"/></g><text x="342" y="90" text-anchor="middle" fill="var(--tx)">3 qubits: 8</text>
+<text x="490" y="56" text-anchor="middle" fill="var(--ac)" font-size="20" font-weight="700">…2ⁿ</text></svg>
+<div class="note">The numbers in the arrows are complex, so a single qubit really has a 2-dimensional <i>complex</i> space, which is hard to draw. The circle above shows just the real part. The Bloch sphere (Part 2) is the complete picture for one qubit.</div></section>
+
+<section data-split="h3,h4" class="s"><h2>6.2 Basis: the measuring sticks</h2>
+<p>To describe an arrow you need reference directions, like "east" and "north" on a map. A <b>basis</b> is a set of such reference directions. Every state can be written as a mix of them.</p>
+<p>A good basis (an <i>orthonormal</i> basis) has two properties:</p>
+<div class="grid"><div class="card"><b>Each direction has length 1</b><span>Each one is itself a valid state.</span></div><div class="card"><b>All at right angles</b><span>Their overlaps are 0, so a measurement can tell them apart perfectly.</span></div><div class="card"><b>Just enough of them</b><span>One per dimension: 2 for a qubit, 4 for two qubits, 2ⁿ for n qubits.</span></div></div>
+<h4>The three common bases for one qubit</h4>
+<div class="tw"><table><tr><th>Name</th><th>Directions</th><th>Bloch axis</th><th>Question it asks</th></tr>
+<tr><td>Computational (Z) basis</td><td>|0⟩, |1⟩</td><td>z (up–down)</td><td>"0 or 1?"</td></tr>
+<tr><td>Hadamard (X) basis</td><td>|+⟩, |−⟩</td><td>x</td><td>"+ or −?"</td></tr>
+<tr><td>Y basis</td><td>|+i⟩, |−i⟩</td><td>y</td><td>"+i or −i?"</td></tr></table></div>
+<p><b>One state, many descriptions.</b> Choosing a basis doesn't change the state, only how you describe it, just as one place can be given in miles or in kilometres. For example, |0⟩ written in the X basis is (|+⟩ + |−⟩)/√2. That is why measuring |0⟩ with the "+ or −?" question gives 50/50.</p>
+<h3>Try it: one arrow, two bases</h3>
+<p>Turn the arrow. Its coordinates are read off against the solid axes (Z basis) and the dashed axes (X basis) at the same time.</p>
+<div class="two"><svg class="pic" id="bsS" viewBox="-130 -130 260 260" role="img" aria-label="An arrow with Z-basis and X-basis axes">
+<circle r="100" fill="none" stroke="var(--bd)" stroke-width="2"/>
+<line x1="-115" y1="0" x2="115" y2="0" stroke="var(--a2)" stroke-width="2"/><line x1="0" y1="-115" x2="0" y2="115" stroke="var(--a2)" stroke-width="2"/>
+<line x1="-81" y1="81" x2="81" y2="-81" stroke="#d9830b" stroke-width="2" stroke-dasharray="6 5"/><line x1="-81" y1="-81" x2="81" y2="81" stroke="#d9830b" stroke-width="2" stroke-dasharray="6 5"/>
+<text x="118" y="-6" text-anchor="end" fill="var(--a2)" font-size="14" font-weight="700">|0⟩</text><text x="6" y="-112" fill="var(--a2)" font-size="14" font-weight="700">|1⟩</text>
+<text x="86" y="-86" fill="#d9830b" font-size="14" font-weight="700">|+⟩</text><text x="86" y="98" fill="#d9830b" font-size="14" font-weight="700">|−⟩</text>
+<line id="bsA" x1="0" y1="0" stroke="var(--ac)" stroke-width="5" stroke-linecap="round"/><circle id="bsD" r="7" fill="var(--ac)"/></svg>
+<div><label class="lbl" for="bsR">Turn the arrow: <b id="bsRv"></b></label><input id="bsR" type="range" min="0" max="360" value="20">
+<p id="bsZ" class="m lstate"></p><div class="lbl">Z basis: chance of 0 / 1</div><div class="bar"><i id="bsZ0"></i></div><div class="bar"><i class="b" id="bsZ1"></i></div>
+<p id="bsX" class="m lstate"></p><div class="lbl">X basis: chance of + / −</div><div class="bar"><i id="bsX0"></i></div><div class="bar"><i class="b" id="bsX1"></i></div></div></div>
+<div class="note">For two qubits the computational basis is |00⟩, |01⟩, |10⟩, |11⟩. There is also a famous basis made entirely of entangled states, the <b>Bell basis</b> (6.7).</div></section>
+
+<section class="s"><h2>6.3 The postulates: four rules of the game</h2>
+<p>Chess has a few rules that every game follows. Quantum mechanics also has a short list of rules, called <b>postulates</b>. Nobody derives them from anything deeper: they are the starting assumptions, and every experiment so far agrees with them. Everything in this course follows from these four.</p>
+<svg class="pic wide" viewBox="0 0 560 150" role="img" aria-label="Flow: prepare a state, change it with a unitary, measure it to get a result" font-family="system-ui" font-size="13">
+<g fill="var(--sf)" stroke="var(--ac)" stroke-width="2"><rect x="10" y="40" width="120" height="60" rx="12"/><rect x="220" y="40" width="120" height="60" rx="12"/><rect x="430" y="40" width="120" height="60" rx="12"/></g>
+<g stroke="var(--mu)" stroke-width="2" fill="none"><line x1="132" y1="70" x2="214" y2="70"/><line x1="342" y1="70" x2="424" y2="70"/><path d="M206 64 L214 70 L206 76"/><path d="M416 64 L424 70 L416 76"/></g>
+<circle class="flow" cx="140" cy="70" r="6" fill="#d9830b"/>
+<g text-anchor="middle" fill="var(--tx)" font-weight="700"><text x="70" y="66">1. State</text><text x="280" y="66">2. Change</text><text x="490" y="66">3. Measure</text></g>
+<g text-anchor="middle" fill="var(--mu)" font-size="12"><text x="70" y="86">arrow |ψ⟩</text><text x="280" y="86">unitary U</text><text x="490" y="86">get 0 or 1</text><text x="280" y="135">4. Several systems? Combine with ⊗</text></g></svg>
+<div class="grid">
+<div class="card"><b>Postulate 1: State</b><span>A system's complete state is an arrow of length 1 in its Hilbert space (6.1).</span></div>
+<div class="card"><b>Postulate 2: Change</b><span>When nobody is looking, a closed system changes by a unitary operation: a reversible rotation (6.5).</span></div>
+<div class="card"><b>Postulate 3: Measurement</b><span>Measuring gives one result at random, with chance = |overlap|². Afterwards the state jumps to match the result (6.6).</span></div>
+<div class="card"><b>Postulate 4: Combining</b><span>The state space of several systems together is the tensor product of their spaces (6.4).</span></div></div>
+<div class="note">Notice the odd pair: rule 2 says change is smooth and reversible, while rule 3 says measurement is sudden, random and permanent. Why nature works like this is still debated. It is called the "measurement problem".</div></section>
+
+<section class="s"><h2>6.4 Quantum registers: groups of qubits</h2>
+<p>In a normal computer, a <b>register</b> is a small group of bits that hold one number together. For example, 8 bits make a byte that holds a number from 0 to 255. A <b>quantum register</b> is the same idea with qubits: n qubits used together as one unit.</p>
+<div class="two"><div><h4>Classical 3-bit register</h4><p>Holds <b>one</b> of the 8 numbers 0–7 at a time. For example 101 = 5.</p></div><div><h4>Quantum 3-qubit register</h4><p>Can hold a <b>mix of all 8</b> numbers at once, with one amplitude for each. Its state lives in an 8-dimensional Hilbert space (postulate 4).</p></div></div>
+<p>The kets are written as binary numbers: |101⟩ means the qubits read 1, 0, 1 from left to right, which is the number 5. The leftmost qubit is the "biggest" digit.</p>
+<h3>Try it: a 3-qubit register</h3>
+<p>Flip single qubits with X, put every qubit through H to make an equal mix of all 8 numbers, then measure.</p>
+<div class="lb"><button data-rg="X2">X on q2</button><button data-rg="X1">X on q1</button><button data-rg="X0">X on q0</button><button data-rg="H">H on all</button><button data-rg="M" class="go">Measure</button><button data-rg="R">Reset</button></div>
+<p id="rgE" class="m lstate"></p><p id="rgN" class="mu"></p><div id="rgBars" class="rg"></div>
+<div class="note"><b>The catch:</b> after H on all, the register holds all 8 numbers at once, but measuring gives just <b>one</b> of them at random. Quantum algorithms are clever because they use interference to make the useful answer the likely one <i>before</i> measuring.</div></section>
+
+<section class="s"><h2>6.5 Unitary operations: how quantum states change</h2>
+<p>Postulate 2 says that, between measurements, quantum states change only by <b>unitary operations</b>. Every gate in Part 5 is one. In simple terms, a unitary operation is a <b>rotation</b> of the state arrow.</p>
+<div class="two"><svg class="pic" viewBox="-130 -130 260 260" role="img" aria-label="An arrow rotating: allowed. An arrow stretching: not allowed">
+<circle r="100" fill="none" stroke="var(--bd)" stroke-width="2" stroke-dasharray="4 4"/>
+<g class="sweep slow"><line x1="0" y1="0" x2="100" y2="0" stroke="var(--a2)" stroke-width="5" stroke-linecap="round"/><circle cx="100" cy="0" r="7" fill="var(--a2)"/></g>
+<g class="stretch"><line x1="0" y1="0" x2="0" y2="-100" stroke="#e5484d" stroke-width="4" stroke-linecap="round" stroke-dasharray="6 5"/></g>
+<text x="-125" y="-112" fill="var(--a2)" font-size="13" font-weight="700">✓ rotating: allowed</text><text x="-125" y="122" fill="#e5484d" font-size="13" font-weight="700">✗ stretching: not allowed</text></svg>
+<div><h4>The rules a unitary must follow</h4><ul>
+<li><b>Keeps the length at 1:</b> the total chance stays at exactly 100%.</li>
+<li><b>Keeps angles:</b> states that were perfectly distinguishable stay that way. Overlaps never change.</li>
+<li><b>Always reversible:</b> there is an "undo", written U† (U-dagger), with U†U = I.</li>
+<li><b>Predictable:</b> the same input always gives the same output state. There is no randomness here.</li></ul></div></div>
+<h4>Examples</h4><div class="grid"><div class="card"><b>Gates</b><span>X, H, S, CNOT… (Part 5)</span></div><div class="card"><b>Time passing</b><span>Even "doing nothing" is a unitary: the laws of physics (the Schrödinger equation) slowly rotate the state.</span></div><div class="card"><b>Whole circuits</b><span>A chain of unitaries is still a unitary, so a whole circuit is one big rotation.</span></div></div>
+<div class="note"><b>A surprising consequence: no copying.</b> Because unitaries keep overlaps fixed, no unitary can make a perfect copy of an unknown qubit. This is the <b>no-cloning theorem</b>. It is why quantum information can't simply be backed up, and also why eavesdroppers on quantum key distribution get caught.</div></section>
+
+<section data-split="h3,h4" class="s"><h2>6.6 Quantum measurement: reading the answer</h2>
+<p>Measurement is how we get information <i>out</i> of a quantum computer. Postulate 3 has three parts:</p>
+<div class="grid"><div class="card"><b>1. Choose a basis</b><span>You always measure "against" a basis, for example asking "0 or 1?" (Z basis).</span></div><div class="card"><b>2. Random result</b><span>You get one basis state, with chance |⟨result|ψ⟩|². This is called the <i>Born rule</i>.</span></div><div class="card"><b>3. Collapse</b><span>Afterwards the qubit <i>is</i> that result. The old mix is gone for good.</span></div></div>
+<h3>Try it: measurement simulator</h3>
+<p>Prepare a qubit, pick a question, and measure. Measure once to see the collapse, or measure 100 fresh copies to see the chances emerge.</p>
+<div class="two"><svg class="pic" viewBox="-130 -130 260 260" role="img" aria-label="Side view of the Bloch sphere with the prepared state and the measured result">
+<circle r="100" fill="none" stroke="var(--bd)" stroke-width="2"/><line x1="0" y1="-112" x2="0" y2="112" stroke="var(--a2)" stroke-width="2"/><line x1="-112" y1="0" x2="112" y2="0" stroke="#d9830b" stroke-width="2" stroke-dasharray="6 5"/>
+<text x="6" y="-108" fill="var(--a2)" font-size="14" font-weight="700">|0⟩</text><text x="6" y="122" fill="var(--a2)" font-size="14" font-weight="700">|1⟩</text><text x="114" y="-6" text-anchor="end" fill="#d9830b" font-size="14" font-weight="700">|+⟩</text><text x="-114" y="-6" fill="#d9830b" font-size="14" font-weight="700">|−⟩</text>
+<line id="msA" x1="0" y1="0" stroke="var(--ac)" stroke-width="5" stroke-linecap="round"/><circle id="msD" r="7" fill="var(--ac)"/></svg>
+<div><label class="lbl" for="msT">Prepare: tilt from |0⟩ <b id="msTv"></b></label><input id="msT" type="range" min="0" max="180" value="60">
+<div class="lb"><span class="mu">Question:</span><button data-mb="z" class="go">0 or 1? (Z)</button><button data-mb="x">+ or −? (X)</button></div>
+<div class="lb"><button id="ms1">Measure once</button><button id="ms100">Measure 100 copies</button><button id="msR">Clear tally</button></div>
+<p id="msO" aria-live="polite"></p><div id="msBars"></div></div></div>
+<h4>Key facts about measurement</h4><ul>
+<li><b>It can't be undone.</b> Unlike a unitary, collapse throws information away.</li>
+<li><b>Repeat it and you get the same answer.</b> Measure a collapsed qubit again with the same question, and the result is certain.</li>
+<li><b>Measuring one qubit of a register</b> collapses only the part that matches. In an entangled pair this instantly fixes the partner's result too (6.7).</li>
+<li><b>Other bases with a gate:</b> hardware usually only asks "0 or 1?". To ask "+ or −?", apply H first and then measure.</li></ul></section>
+
+<section data-split="h3,h4" class="s"><h2>6.7 Bell states: the four entangled pairs</h2>
+<p>The <b>Bell states</b> (named after physicist John Bell) are the four simplest and most strongly entangled states of two qubits. Each one is a perfect "linked pair": each qubit alone is a 50/50 coin toss, but the two results are always related.</p>
+<div class="tw"><table><tr><th>Name</th><th>State</th><th>Asking "0 or 1?"</th><th>Asking "+ or −?"</th></tr>
+<tr><td>Φ⁺ ("phi plus")</td><td>(|00⟩ + |11⟩)/√2</td><td>Always the <b>same</b></td><td>Always the <b>same</b></td></tr>
+<tr><td>Φ⁻ ("phi minus")</td><td>(|00⟩ − |11⟩)/√2</td><td>Always the <b>same</b></td><td>Always <b>opposite</b></td></tr>
+<tr><td>Ψ⁺ ("psi plus")</td><td>(|01⟩ + |10⟩)/√2</td><td>Always <b>opposite</b></td><td>Always the <b>same</b></td></tr>
+<tr><td>Ψ⁻ ("psi minus", the singlet)</td><td>(|01⟩ − |10⟩)/√2</td><td>Always <b>opposite</b></td><td>Always <b>opposite</b></td></tr></table></div>
+<h4>The two "types", in plain words</h4>
+<div class="grid"><div class="card"><b>Φ (phi) type: "same"</b><span>Asked "0 or 1?", the two qubits always agree.</span></div><div class="card"><b>Ψ (psi) type: "opposite"</b><span>Asked "0 or 1?", the two qubits always disagree.</span></div><div class="card"><b>+ or − sign: the phase</b><span>Invisible to "0 or 1?", but it shows up when you ask "+ or −?". Ψ⁻ is opposite whichever way you ask.</span></div></div>
+<h4>How to make each one</h4>
+<p>Use the H-then-CNOT circuit from Part 5 (5.9), but change the starting bits:</p>
+<div class="tw"><table><tr><th>Start</th><th>H on A, then CNOT (A controls B)</th></tr><tr><td>|00⟩</td><td>Φ⁺</td></tr><tr><td>|10⟩</td><td>Φ⁻</td></tr><tr><td>|01⟩</td><td>Ψ⁺</td></tr><tr><td>|11⟩</td><td>Ψ⁻</td></tr></table></div>
+<h3>Try it: Bell pair lab</h3>
+<p>Pick a Bell state and a question, then measure many pairs. Watch the "same / opposite" tally, while each qubit on its own stays a coin toss.</p>
+<div class="lb"><span class="mu">Pair:</span><button data-bp="0" class="go">Φ⁺</button><button data-bp="1">Φ⁻</button><button data-bp="2">Ψ⁺</button><button data-bp="3">Ψ⁻</button></div>
+<div class="lb"><span class="mu">Question:</span><button data-bq="z" class="go">0 or 1?</button><button data-bq="x">+ or −?</button></div>
+<div class="bp"><div class="pt" id="bpA">?</div><div class="lnk"></div><div class="pt b" id="bpB">?</div></div>
+<div class="lb"><button id="bp1">Measure a pair</button><button id="bp20">Measure 20 pairs</button><button id="bpR">Clear</button></div>
+<p id="bpO" class="mu" aria-live="polite"></p><div id="bpBars"></div>
+<h4>Why they matter</h4><div class="grid"><div class="card"><b>Teleportation</b><span>Moves a qubit's state using one Bell pair and two ordinary bits.</span></div><div class="card"><b>Superdense coding</b><span>Sends 2 ordinary bits by transmitting only 1 qubit of a Bell pair.</span></div><div class="card"><b>Quantum keys (E91)</b><span>Shared Bell pairs give two people matching random keys, and eavesdropping can be detected.</span></div><div class="card"><b>Bell tests</b><span>Experiments with these pairs proved that nature really is quantum (Nobel Prize in Physics, 2022).</span></div></div>
+<div class="note">Together the four Bell states form the <b>Bell basis</b>: four orthonormal directions for two qubits, just like |00⟩, |01⟩, |10⟩, |11⟩. A "Bell measurement" asks which of the four the pair is in, and is the key step in teleportation.</div></section>
+
+<section class="s"><h2>6.8 Summary</h2>
+<div class="tw"><table><tr><th>Idea</th><th>In plain words</th></tr>
+<tr><td>Hilbert space</td><td>The space of all possible states; for n qubits it has 2ⁿ directions</td></tr>
+<tr><td>Basis</td><td>Reference directions, all at right angles, used to describe and measure states</td></tr>
+<tr><td>Postulates</td><td>Four rules: state, change (unitary), measurement, combining (⊗)</td></tr>
+<tr><td>Quantum register</td><td>A group of n qubits holding a mix of 2ⁿ numbers</td></tr>
+<tr><td>Unitary operation</td><td>A reversible rotation that keeps the total chance at 100%</td></tr>
+<tr><td>Measurement</td><td>Random result with chance |overlap|², then the state collapses</td></tr>
+<tr><td>Bell states</td><td>Four maximally entangled pairs: Φ (same) and Ψ (opposite), each with + or −</td></tr></table></div></section>
+<div class="pn"><a href="part5.html">← Part 5</a><a href="part7.html">Part 7 →</a></div></main></div>
+
+<script src="js/part6.js"></script>
+<script src="js/site.js"></script>
+</body></html>

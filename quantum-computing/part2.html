@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Part 2 · The Qubit | VQTF Quantum Computing</title>
+<link rel="stylesheet" href="css/style.css">
+</head><body>
+<nav class="top"><a href="index.html">Home</a><a href="part1.html">Part 1 · Introduction</a><a href="part2.html">Part 2 · The Qubit</a><a href="part3.html">Part 3 · Math Foundations</a><a href="part4.html">Part 4 · Dirac Notation</a><a href="part5.html">Part 5 · Quantum Gates</a><a href="part6.html">Part 6 · Quantum Rules</a><a href="part7.html">Part 7 · Algorithms</a></nav>
+
+<div class="pg" id="p-part2">
+<header class="hero"><svg class="anim" viewBox="0 0 300 200" aria-label="Spinning coin representing a qubit"><g class="coin"><circle cx="150" cy="100" r="62" fill="#ffd36b" stroke="#fff" stroke-width="4"/><text x="150" y="122" text-anchor="middle" font-size="64" font-family="system-ui" font-weight="700" fill="#2a1f8f">?</text></g></svg>
+<h1>Part 2 · The Qubit</h1><p>The building block of quantum computers, and the Bloch sphere that maps it.</p></header>
+<main>
+<section class="s"><h2>2.1 What is a qubit?</h2>
+<p>A classical bit is a switch: it is 0 or 1. A <b>qubit</b> (quantum bit) is a tiny physical object, such as a single electron, a particle of light or a small superconducting circuit, whose state can be a <i>blend</i> of 0 and 1.</p><p>We write this blend as <span class="m">|ψ⟩ = α|0⟩ + β|1⟩</span>. Read it as: "the qubit ψ is <i>this much</i> 0 (α) plus <i>this much</i> 1 (β)". Part 3 explains the notation step by step.</p>
+<div class="grid"><div class="card"><b>Superposition</b><span>Until you look, the qubit holds both the 0 part and the 1 part, in amounts set by α and β.</span></div><div class="card"><b>Measurement</b><span>Looking always gives a plain 0 or 1. Bigger α means a better chance of 0 (the exact chance is α squared). After you look, the blend is gone.</span></div><div class="card"><b>Fragile</b><span>Heat, light or vibration can scramble the blend. This is called decoherence, and it is why error correction matters.</span></div></div></section>
+
+<section data-split="h3" class="s wv"><h2>2.2 Amplitude and phase: the qubit as a wave</h2>
+<p>Two words come up again and again in quantum computing: <b>amplitude</b> and <b>phase</b>. They are easiest to understand if you picture a qubit as a pair of small waves. This section builds the idea in five short steps.</p>
+
+<h3>Step 1: Why picture a qubit as a wave?</h3>
+<p>About a hundred years ago, scientists found something strange. Tiny things like electrons and particles of light don't behave only like little balls. They also behave like <b>waves</b>, the way ripples spread across a pond. Two ripples that meet can add up into a bigger wave or cancel each other out.</p>
+<div class="two">
+<svg class="rip" viewBox="0 0 200 200" role="img" aria-label="Ripples spreading out on a pond"><circle cx="100" cy="100" r="90"/><circle cx="100" cy="100" r="90" style="animation-delay:-1s"/><circle cx="100" cy="100" r="90" style="animation-delay:-2s"/><circle cx="100" cy="100" r="5" class="stone"/></svg>
+<svg viewBox="0 0 320 200" role="img" aria-label="A wave with its crest, trough and height labelled" font-family="system-ui" font-size="13">
+<line x1="10" y1="100" x2="310" y2="100" stroke="var(--bd)" stroke-dasharray="4 4"/>
+<path d="M10 100 C 47.5 30, 72.5 30, 85 30 S 122.5 30, 160 100 S 197.5 170, 235 170 S 272.5 170, 310 100" fill="none" stroke="var(--a2)" stroke-width="4"/>
+<g stroke="var(--ac)" stroke-width="2"><line x1="85" y1="100" x2="85" y2="36"/><path d="M80 44 L85 34 L90 44" fill="none"/></g>
+<text x="85" y="118" text-anchor="middle" fill="var(--ac)" font-weight="700">Height = amplitude</text>
+<text x="85" y="22" text-anchor="middle" fill="var(--tx)">Crest (top)</text>
+<text x="235" y="190" text-anchor="middle" fill="var(--tx)">Trough (bottom)</text>
+<text x="245" y="40" text-anchor="middle" fill="var(--mu)">Position in the cycle</text><text x="245" y="58" text-anchor="middle" fill="var(--mu)">= phase</text></svg>
+</div>
+<p>A qubit is one of these tiny things. So we picture its <b>0 part</b> and its <b>1 part</b> as two small waves. Any wave is described by just two things:</p>
+<div class="grid"><div class="card"><b>Amplitude</b><span>How big the wave is (its height).</span></div><div class="card"><b>Phase</b><span>Where the wave is in its cycle: at the top, at the bottom, or somewhere in between.</span></div></div>
+
+<h3>Step 2: Amplitude, "how much" of each answer</h3>
+<p>The amplitude of the 0 part says <i>how much</i> of the qubit is 0, and the amplitude of the 1 part says how much is 1. A bigger wave means that answer is more likely when you look.</p>
+<p>The exact rule is simple: <b>chance = amplitude × amplitude</b>. An amplitude of 0.71 gives 0.71 × 0.71 ≈ 0.5, which is a 50% chance. The two chances always add up to 100%, so if one wave grows, the other must shrink.</p>
+<p><b>Try it:</b> move the slider to share the qubit between 0 and 1.</p>
+<input id="wA" type="range" min="0" max="180" value="60" aria-label="Share between 0 and 1">
+<canvas id="cA" role="img" aria-label="The 0 part and 1 part drawn as two waves whose heights follow the slider"></canvas>
+<div class="lbl" id="wA0t"></div><div class="bar"><i id="wA0"></i></div><div class="lbl" id="wA1t"></div><div class="bar"><i class="b" id="wA1"></i></div>
+
+<h3>Step 3: Phase, "where in the cycle"</h3>
+<p>A wave goes up and down over and over, like a swing. Phase says where it is in that cycle right now. An easy way to picture this is a <b>clock hand</b> spinning round:</p>
+<ul><li>The <b>length</b> of the hand is the amplitude. A longer hand makes a taller wave.</li>
+<li>The <b>direction</b> the hand points is the phase. One full turn is one full wave, so phase is measured as an angle, from 0° to 360°.</li></ul>
+<p>Watch how the spinning hand draws the wave. The height of the tip, traced over time, <i>is</i> the wave.</p>
+<label class="lbl" for="wB">Amplitude (length of the hand)</label><input id="wB" type="range" min="20" max="100" value="80">
+<canvas id="cB" role="img" aria-label="A spinning arrow on a circle tracing out a wave"></canvas>
+<div class="note">This hand is what Part 3 calls a <b>complex number</b>: a size (amplitude) and a direction (phase) in one.</div>
+
+<h3>Step 4: Only the gap between phases matters</h3>
+<p>A qubit has two hands, one for the 0 part and one for the 1 part, and both keep spinning. You can never measure where a single hand points. What matters is the <b>gap</b> between the two hands. This gap is called the <b>relative phase</b>.</p>
+<p>Think of two runners on a circular track. The race looks the same whether they are at the start line or halfway round. What matters is how far apart they are.</p>
+<label class="lbl" for="wC">Gap between the two hands (relative phase)</label><input id="wC" type="range" min="0" max="360" value="90">
+<canvas id="cC" role="img" aria-label="Two arrows spinning together with a fixed gap, and their two waves shifted by that gap"></canvas>
+<p>Turning both hands by the same amount changes nothing you can ever measure. Changing the gap does make a real difference, which you'll see in Step 5. On the Bloch sphere (2.4), the amplitudes set how far the arrow tilts down, and the relative phase sets how far it turns around.</p>
+
+<h3>Step 5: How phase changes amplitude</h3>
+<p>On its own, phase never changes the chances. The chance only depends on each wave's height. But quantum computers use <b>gates</b>, which mix the 0 part and the 1 part together. When the two waves are mixed into the same answer, they add up, and now the gap between them matters a lot:</p>
+<ul><li><b>In step</b> (gap 0°): crest meets crest, and the waves add into a bigger wave. That answer becomes <b>more</b> likely.</li>
+<li><b>Opposite</b> (gap 180°): crest meets trough, and the waves cancel out. That answer becomes <b>impossible</b>.</li>
+<li><b>In between:</b> they partly cancel.</li></ul>
+<p>This adding and cancelling is called <b>interference</b>. It works just like noise-cancelling headphones, which play an opposite sound wave to cancel the noise.</p>
+<p><b>Try it:</b> change the gap and watch what happens to the combined wave (orange) and its chance.</p>
+<label class="lbl" for="wD">Gap between the two waves</label><input id="wD" type="range" min="0" max="360" value="60">
+<canvas id="cD" role="img" aria-label="Two waves and their sum; the sum grows or shrinks as the gap changes"></canvas>
+<div class="lbl" id="wD0t"></div><div class="bar"><i id="wD0"></i></div>
+<div class="note">This is the real reason quantum computers can be fast. They don't simply "try every answer at once". Programs are built so that the waves for wrong answers cancel out and the waves for the right answer add up. Part 3 (3.7) shows the maths.</div>
+
+<h3>Summary</h3>
+<div class="tw"><table><tr><th>Idea</th><th>In plain words</th><th>What it does</th></tr>
+<tr><td>Wave picture</td><td>The 0 part and 1 part of a qubit behave like two small waves</td><td>Lets them add up or cancel</td></tr>
+<tr><td>Amplitude</td><td>The height of each wave (length of the hand)</td><td>Chance = amplitude × amplitude</td></tr>
+<tr><td>Phase</td><td>Where each wave is in its cycle (direction of the hand)</td><td>Can't be seen on its own</td></tr>
+<tr><td>Relative phase</td><td>The gap between the two waves</td><td>The part of phase that matters</td></tr>
+<tr><td>Interference</td><td>Mixing waves: in step they add, opposite they cancel</td><td>Phase decides the new amplitudes, and so the chances</td></tr></table></div>
+</section>
+
+<section class="s"><h2>2.3 Interactive: Qubit in 6 steps</h2>
+<p>Six short animations build up the idea of a qubit one step at a time. Read the caption under each one, then click <b>Next</b> or a numbered dot (or use your arrow keys) to move on.</p>
+<div id="qapp"><div class="qm"><div class="qh"><b>Qubit in 6 steps</b><span id="cnt"></span></div><div class="view" id="view"><canvas id="cv" role="img" aria-label="Animation explaining a qubit"></canvas></div><div class="cap" aria-live="polite"><h2 id="ttl"></h2><p id="txt"></p></div><div class="qbar"><button id="back">Back</button><button id="next" class="go">Next</button><button id="act" class="go" hidden></button><div class="dots" id="dots"></div><button id="play">Pause</button></div></div></div></section>
+
+<section class="s"><h2>2.4 What is a Bloch sphere?</h2>
+<p>The Bloch sphere is a <b>map of every possible state of one qubit</b>, in the same way a globe is a map of every place on Earth. It is not real space: it is a picture that turns abstract numbers into something you can see and rotate.</p>
+<h3>Why a sphere? Counting the numbers</h3>
+<ol><li>A qubit state <span class="m">α|0⟩ + β|1⟩</span> uses two complex numbers, which is <b>4 real numbers</b>.</li>
+<li>The chances must add up to 100% (|α|² + |β|² = 1). That removes <b>1</b>, leaving 3.</li>
+<li>Shifting the phase of both parts by the same amount (turning both α and β by the same angle) changes nothing you could ever measure. That removes <b>1</b> more, leaving <b>2</b>.</li></ol>
+<p>Two numbers are exactly what you need to name a spot on a globe: <b>latitude and longitude</b>. So every pure qubit state is one point on a sphere, and the arrow from the centre to that point is the state.</p>
+<div class="tw"><table><tr><th>On the qubit</th><th>On the Bloch sphere (the globe)</th></tr>
+<tr><td>Surely 0 / surely 1</td><td>North pole (top) / South pole (bottom)</td></tr>
+<tr><td>Odds of 0 versus 1</td><td>Latitude: how far down from the top (angle θ)</td></tr>
+<tr><td>Phase (how the 0 and 1 parts line up)</td><td>Longitude: how far around (angle φ)</td></tr>
+<tr><td>Equal 50/50 blend</td><td>Anywhere on the equator</td></tr>
+<tr><td>Two perfectly distinguishable states (|0⟩ and |1⟩)</td><td>Exactly opposite points</td></tr>
+<tr><td>Changing the qubit's state</td><td>Moving the arrow to another point (turning the sphere)</td></tr>
+<tr><td>Noisy / uncertain (mixed) qubit</td><td>A point inside the ball; the arrow is shorter</td></tr></table></div>
+<h3>Try it: place the arrow</h3>
+<div class="two"><div>θ (down from top): <b id="tv"></b><input id="bt" type="range" min="0" max="180" value="60" aria-label="theta"></div><div>φ (around): <b id="pv"></b><input id="bp" type="range" min="0" max="360" value="45" aria-label="phi"></div></div>
+<div class="rd" id="bo"></div>
+<div class="bar"><i id="q0"></i></div><div class="bar"><i class="b" id="q1"></i></div></section>
+<section class="s ax"><h2>2.5 The three axes of the Bloch sphere</h2>
+<p>Like a globe, the Bloch sphere needs reference lines. It uses three axes at right angles to each other: <b style="color:#e5484d">x</b>, <b style="color:#2f9e44">y</b> and <b style="color:var(--ac)">z</b>. Each axis stands for a different <i>question</i> you can ask the qubit, and each end of an axis is one of the two possible answers.</p>
+<svg viewBox="0 0 360 300" role="img" aria-label="Bloch sphere with labelled x, y and z axes" font-family="system-ui" font-size="15">
+<g fill="none" stroke="var(--mu)"><circle cx="180" cy="150" r="100"/><ellipse cx="180" cy="150" rx="100" ry="30"/><ellipse cx="180" cy="150" rx="30" ry="100" stroke-dasharray="3 4" opacity=".5"/></g>
+<g stroke-width="3" stroke-linecap="round"><line x1="180" y1="268" x2="180" y2="32" stroke="var(--ac)"/><line x1="62" y1="150" x2="298" y2="150" stroke="#2f9e44"/><line x1="272" y1="84" x2="88" y2="216" stroke="#e5484d"/></g>
+<g font-weight="700"><text x="180" y="22" text-anchor="middle" fill="var(--ac)">+z · |0⟩</text><text x="180" y="290" text-anchor="middle" fill="var(--ac)">−z · |1⟩</text>
+<text x="304" y="155" fill="#2f9e44">+y</text><text x="56" y="155" text-anchor="end" fill="#2f9e44">−y</text>
+<text x="84" y="234" text-anchor="end" fill="#e5484d">+x</text><text x="278" y="78" fill="#e5484d">−x</text></g></svg>
+<div class="tw"><table><tr><th>Axis</th><th>Ends of the axis</th><th>What it signifies</th></tr>
+<tr><td><b style="color:var(--ac)">z</b> (up–down)</td><td>+z = |0⟩ (top)<br>−z = |1⟩ (bottom)</td><td>The <b>answer axis</b>. Height tells the odds of reading 0 or 1: P(0) = (1+z)/2, P(1) = (1−z)/2. Top is a sure 0, bottom a sure 1, the equator is 50/50.</td></tr>
+<tr><td><b style="color:#e5484d">x</b> (left–right)</td><td>+x = |+⟩ = (|0⟩+|1⟩)/√2<br>−x = |−⟩ = (|0⟩−|1⟩)/√2</td><td>Both ends are a perfect 50/50 mix. At +x the 0 part and 1 part are <b>in step (+)</b>; at −x they are <b>opposite (−)</b>. Asking 0-or-1 can't tell these two apart, but the x question can.</td></tr>
+<tr><td><b style="color:#2f9e44">y</b> (front–back)</td><td>+y = |+i⟩ = (|0⟩+i|1⟩)/√2<br>−y = |−i⟩ = (|0⟩−i|1⟩)/√2</td><td>Also a perfect 50/50 mix, but here the two parts are a <b>quarter-turn apart</b>, one way (+i) or the other (−i). This is the third question, which neither z nor x can answer.</td></tr></table></div>
+<div class="note"><b>Reading a coordinate:</b> each coordinate runs from −1 to +1 and equals (chance of the first answer) − (chance of the second). For example z = +1 means a sure 0, z = 0 means 50/50. Different books draw x pointing toward you or sideways; all that matters is that the three axes are at right angles. For those who want the formula: <span class="m">|ψ⟩ = cos(θ/2)|0⟩ + e<sup>iφ</sup> sin(θ/2)|1⟩</span>, with x = sinθ cosφ, y = sinθ sinφ, z = cosθ.</div></section>
+<section class="s"><h2>2.6 Why do we need three axes?</h2>
+<p><b>Each measurement answers only one question, and one answer can't pin down an arrow that can point anywhere in 3D.</b> Each axis asks a different question, so you need all three.</p>
+<h3>Shadow analogy</h3>
+<p>Shine a light on an object and look at its shadow on the floor. The shadow is flat, and very different objects can cast the same shadow. Measuring along z is like seeing only the floor shadow: it tells you how high the arrow is (the odds of 0 or 1) but not which way around it points. Add the shadows on two walls as well, and you know the object's exact shape.</p>
+<h3>Same z answer, different states</h3>
+<div class="tw"><table><tr><th>State</th><th>Ask z: 0 or 1?</th><th>Ask x: + or −?</th><th>Ask y: +i or −i?</th></tr>
+<tr><td>|0⟩</td><td><b>Sure 0</b></td><td>50/50</td><td>50/50</td></tr>
+<tr><td>|+⟩</td><td>50/50</td><td><b>Sure +</b></td><td>50/50</td></tr>
+<tr><td>|−⟩</td><td>50/50</td><td><b>Sure −</b></td><td>50/50</td></tr>
+<tr><td>|+i⟩</td><td>50/50</td><td>50/50</td><td><b>Sure +i</b></td></tr></table></div>
+<p>|+⟩, |−⟩ and |+i⟩ all give the same 50/50 result when you ask "0 or 1?", yet they are different states. The difference shows up later in a computation: for example, turning the sphere a quarter-turn can make |+⟩ a sure 0 and |−⟩ a sure 1. The z question alone can't see that difference, but the x and y questions can.</p>
+<h3>Why not just two axes?</h3>
+<p>The arrow's tip always sits on the sphere, so x² + y² + z² = 1. If you know x and z, you can work out how big y is, but not whether it is positive or negative: y = ±√(1 − x² − z²). For example |+i⟩ and |−i⟩ both have x = 0 and z = 0, so only the y question can tell them apart. With all three axes there is no guessing left.</p>
+<h3>Worked example: discovering an unknown qubit</h3>
+<p>Suppose someone hands you a qubit and you want to find its arrow. Ask them to make the same qubit many times (say 3000), split the copies into three groups, and ask each group a different question:</p>
+<div class="tw"><table><tr><th>Question</th><th>Result</th><th>Coordinate = chance(first) − chance(second)</th></tr>
+<tr><td>z: 0 or 1?</td><td>90% got 0</td><td>z = 0.9 − 0.1 = <b>0.8</b></td></tr>
+<tr><td>x: + or −?</td><td>80% got +</td><td>x = 0.8 − 0.2 = <b>0.6</b></td></tr>
+<tr><td>y: +i or −i?</td><td>50% got +i</td><td>y = 0.5 − 0.5 = <b>0</b></td></tr></table></div>
+<p>So the arrow points to (0.6, 0, 0.8). Check: 0.36 + 0 + 0.64 = 1, so it lies on the sphere. This process is called <i>state tomography</i>. It needs many identical copies for two reasons: measuring a qubit destroys its blend, and the laws of physics forbid making a copy of an unknown qubit (the <i>no-cloning theorem</i>).</p>
+</section>
+<div class="pn"><a href="part1.html">← Part 1</a><a href="part3.html">Part 3 →</a></div></main></div>
+
+<script src="js/part2.js"></script>
+<script src="js/site.js"></script>
+</body></html>

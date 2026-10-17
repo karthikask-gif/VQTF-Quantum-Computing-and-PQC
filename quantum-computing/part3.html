@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Part 3 · Mathematical Foundations | VQTF Quantum Computing</title>
+<link rel="stylesheet" href="css/style.css">
+</head><body>
+<nav class="top"><a href="index.html">Home</a><a href="part1.html">Part 1 · Introduction</a><a href="part2.html">Part 2 · The Qubit</a><a href="part3.html">Part 3 · Math Foundations</a><a href="part4.html">Part 4 · Dirac Notation</a><a href="part5.html">Part 5 · Quantum Gates</a><a href="part6.html">Part 6 · Quantum Rules</a><a href="part7.html">Part 7 · Algorithms</a></nav>
+
+<div class="pg" id="p-part3">
+<header class="hero">
+<svg class="anim" viewBox="0 0 300 200" aria-label="Bloch sphere with rotating state vector"><g fill="none" stroke="#fff" stroke-opacity=".7"><circle cx="150" cy="100" r="75"/><ellipse cx="150" cy="100" rx="75" ry="22"/><line x1="150" y1="15" x2="150" y2="185"/></g><g fill="#fff" font-family="system-ui" font-size="14"><text x="158" y="22">|0⟩</text><text x="158" y="192">|1⟩</text></g><g class="orb" style="transform-origin:150px 100px"><line x1="150" y1="100" x2="225" y2="100" stroke="#ffd36b" stroke-width="3"/><circle cx="225" cy="100" r="6" fill="#ffd36b"/></g></svg>
+<h1>Part 3 · Mathematical Foundations</h1><p>All the maths you need, explained step by step with everyday examples.</p></header>
+<main>
+<section class="s"><h2>3.1 Vectors: describing a state</h2>
+<p>A vector is just a list of numbers. You can picture it as an arrow on a map: "3 steps east, 4 steps north" is the vector <span class="m">[3, 4]</span>. In quantum computing, a qubit's state is a vector with two numbers.</p>
+<div class="ex"><b>Example.</b> A classical 0 is <span class="m">[1, 0]</span> (written |0⟩) and a classical 1 is <span class="m">[0, 1]</span> (written |1⟩). A qubit can be a mix: <span class="m">|ψ⟩ = α|0⟩ + β|1⟩</span>, where α and β say "how much 0" and "how much 1".</div>
+<p>Think of it as a compass needle that can point anywhere between "0" and "1", not only at the two ends. The symbol |⟩ is called a "ket" and simply means "this is a state". So |0⟩ is read "ket zero".</p></section>
+
+<section class="s"><h2>3.2 Complex numbers &amp; amplitudes</h2>
+<p>α and β are called <b>amplitudes</b>. Unlike chances, they can be negative or even <i>complex</i>.</p><p>A complex number has the form <span class="m">a + bi</span>, where <span class="m">i</span> is a special number with <span class="m">i × i = −1</span>. You don't need to calculate with them much. Just picture one as an arrow on a flat sheet: its <b>length</b> is its size, and the <b>direction</b> it points is called its <b>phase</b>.</p>
+<div class="ex"><b>Example.</b> Waves on a pond: two waves can add up (crest meets crest) or cancel (crest meets trough). Phase tells you which will happen. Amplitudes behave like these waves, and this adding and cancelling is the secret behind quantum speed-ups (see 3.7).</div></section>
+
+<section class="s"><h2>3.3 Probability &amp; measurement</h2>
+<p>You never see amplitudes directly. When you <b>measure</b> (look at) a qubit you get just 0 or 1. The chance of each is the <b>size of its amplitude, squared</b>. The phase is ignored:</p>
+<p style="text-align:center"><span class="m">P(0) = |α|²</span> &nbsp; <span class="m">P(1) = |β|²</span> &nbsp; and &nbsp;<span class="m">|α|² + |β|² = 1</span></p>
+<div class="ex"><b>Example.</b> If α = β = 1/√2 ≈ 0.707, then P(0) = 0.707² = 0.5 and P(1) = 0.5: a perfect quantum coin flip. The two chances always add up to 1 (100%). After measuring, the qubit <i>collapses</i>: it becomes exactly the result you saw, and the blend is gone.</div>
+<h3>Try it: tilt the qubit</h3>
+<p>Move the slider to tilt the state from |0⟩ (left) to |1⟩ (right) and watch the chances change. (Behind the scenes, α = cos(θ/2) and β = sin(θ/2).)</p>
+<input id="th" type="range" min="0" max="180" value="90" aria-label="Qubit angle">
+<div id="vals" class="m" style="display:block;margin:8px 0"></div>
+<div class="bar"><i id="b0"></i></div><div class="bar"><i class="b" id="b1"></i></div></section>
+
+<section data-split="h3" class="s"><h2>3.4 Matrices: machines that transform vectors</h2>
+<p>A <b>matrix</b> is a grid of numbers that acts like a machine: feed it a vector and it gives back a new vector. Every change you make to a qubit is described by a matrix, so it is worth learning how they work.</p>
+<h3>Step 1: how a matrix acts on a vector</h3>
+<p>To get each entry of the answer, take one row of the matrix, multiply it entry by entry with the vector, and add the results.</p>
+<div class="ex"><span class="mat" style="grid-template-columns:repeat(2,auto)"><i>a</i><i>b</i><i>c</i><i>d</i></span> × <span class="mat" style="grid-template-columns:repeat(1,auto)"><i>α</i><i>β</i></span> = <span class="mat" style="grid-template-columns:repeat(1,auto)"><i>aα + bβ</i><i>cα + dβ</i></span><br><br><b>Number example.</b> The "swap" matrix <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>0</i><i>1</i><i>1</i><i>0</i></span> × <span class="mat" style="grid-template-columns:repeat(1,auto)"><i>1</i><i>0</i></span>: top = 0·1 + 1·0 = 0, bottom = 1·1 + 0·0 = 1, so the result is <span class="mat" style="grid-template-columns:repeat(1,auto)"><i>0</i><i>1</i></span>. It swapped the two entries.</div>
+<h3>Step 2: read a matrix by its columns</h3>
+<p>Here is a shortcut. The <b>first column</b> tells you where the arrow [1, 0] ends up, and the <b>second column</b> tells you where [0, 1] ends up. Every other arrow is a mix of these two, so the columns tell you everything the matrix does.</p>
+<div class="ex"><b>Example.</b> The matrix <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>0</i><i>−1</i><i>1</i><i>0</i></span> has columns (0, 1) and (−1, 0). So [1, 0] → [0, 1] and [0, 1] → [−1, 0]. For any [a, b] the result is [−b, a], for instance [2, 1] → [−1, 2]. This matrix turns every arrow a quarter-turn (90°) anticlockwise.</div>
+<h3>Step 3: a few simple matrices</h3>
+<div class="tw"><table><tr><th>Name</th><th>Matrix</th><th>What it does to [a, b]</th></tr>
+<tr><td>Identity I</td><td><span class="mat" style="grid-template-columns:repeat(2,auto)"><i>1</i><i>0</i><i>0</i><i>1</i></span></td><td>Nothing: [a, b] → [a, b]</td></tr>
+<tr><td>Swap</td><td><span class="mat" style="grid-template-columns:repeat(2,auto)"><i>0</i><i>1</i><i>1</i><i>0</i></span></td><td>Swaps the entries: [b, a]</td></tr>
+<tr><td>Sign-flip</td><td><span class="mat" style="grid-template-columns:repeat(2,auto)"><i>1</i><i>0</i><i>0</i><i>−1</i></span></td><td>Flips the sign of the second entry: [a, −b]</td></tr>
+<tr><td>Quarter-turn</td><td><span class="mat" style="grid-template-columns:repeat(2,auto)"><i>0</i><i>−1</i><i>1</i><i>0</i></span></td><td>Rotates the arrow 90°: [−b, a]</td></tr>
+<tr><td>Mixer A</td><td>(1/√2) <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>1</i><i>1</i><i>1</i><i>−1</i></span></td><td>Mixes the entries: [(a + b)/√2, (a − b)/√2]</td></tr></table></div>
+<h3>Worked examples</h3>
+<div class="ex"><b>A. Swap on a mix.</b> Swap × [0.6, 0.8] = [0.8, 0.6]. Using 3.3, the chances change from 36% / 64% to 64% / 36%.</div>
+<div class="ex"><b>B. Mixer step by step.</b> On [1, 0]: top = (1·1 + 1·0)/√2 = 0.707, bottom = (1·1 + (−1)·0)/√2 = 0.707, an equal mix. On [0, 1]: top = 0.707, bottom = (1·0 + (−1)·1)/√2 = −0.707. The chances are still 50/50, but the sign differs, and that difference can matter later (see 3.7).</div>
+<div class="ex"><b>C. Two matrices in a row.</b> Apply A, then A again, to [1, 0]: [1, 0] → [0.707, 0.707] → [(0.707 + 0.707)/√2, (0.707 − 0.707)/√2] = [1, 0]. So A·A = I: A undoes itself.</div>
+<div class="ex"><b>D. Order matters.</b> Start with [1, 0]. Sign-flip then A: sign-flip leaves [1, 0] alone, then A gives [0.707, 0.707]. A then sign-flip: A gives [0.707, 0.707], then sign-flip gives [0.707, −0.707]. Different results. When writing a chain of matrices, the one applied first is written on the right.</div>
+<div class="note"><b>Undoing a matrix.</b> The <i>inverse</i> of a matrix is the one that undoes it. A quarter-turn is undone by a quarter-turn the other way, and A undoes itself. Some matrices can't be undone because they throw information away (you'll see one in 3.6.3). Matrices that keep arrow lengths the same and lose nothing are special: they are called <i>unitary</i> (3.6.3).</div></section>
+
+<section data-split="h3" class="s"><h2>3.5 Eigenvectors &amp; eigenvalues</h2>
+<p>Most arrows change direction when a matrix acts on them. But a few special arrows keep pointing the same way and are only stretched, shrunk or flipped around. These are the matrix's <b>eigenvectors</b> (from German "eigen", meaning "own"). The amount each one is stretched by is its <b>eigenvalue</b>, written λ (lambda):</p>
+<p style="text-align:center"><span class="m">A · v = λ · v</span></p>
+<div class="ex"><b>Stretch matrix.</b> <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>2</i><i>0</i><i>0</i><i>3</i></span> stretches the east direction by 2 and the north direction by 3. [1, 0] → [2, 0] (eigenvector, λ = 2). [0, 1] → [0, 3] (eigenvector, λ = 3). But [1, 1] → [2, 3] points in a new direction, so it is <i>not</i> an eigenvector.</div>
+<div class="ex"><b>Sign-flip matrix.</b> It gives [1, 0] → +1·[1, 0] and [0, 1] → −1·[0, 1]. So |0⟩ has eigenvalue +1 and |1⟩ has eigenvalue −1.</div>
+<div class="ex"><b>Swap matrix.</b> [1, 1]/√2 → [1, 1]/√2, so eigenvalue +1. [1, −1]/√2 → [−1, 1]/√2 = −1·[1, −1]/√2, so eigenvalue −1. But [1, 0] → [0, 1] is a new direction, so it is <i>not</i> an eigenvector.</div>
+<h3>How to find them (recipe)</h3>
+<p>You will rarely need to do this by hand, but here is how. For a 2×2 matrix [[a, b], [c, d]], the eigenvalues are the values of λ that make (a − λ)(d − λ) − b·c = 0. Then, for each λ, find the arrow v with A·v = λ·v. For the swap matrix (a = 0, b = 1, c = 1, d = 0): λ·λ − 1 = 0, so λ = +1 or −1.</p>
+<div class="tw"><table><tr><th>Matrix</th><th>Eigenvector with λ = +1</th><th>Eigenvector with λ = −1</th></tr>
+<tr><td>Sign-flip (σz)</td><td>|0⟩ = [1, 0]</td><td>|1⟩ = [0, 1]</td></tr>
+<tr><td>Swap (σx)</td><td>|+⟩ = [1, 1]/√2</td><td>|−⟩ = [1, −1]/√2</td></tr>
+<tr><td><span class="mat" style="grid-template-columns:repeat(2,auto)"><i>0</i><i>−i</i><i>i</i><i>0</i></span> (σy)</td><td>|+i⟩ = [1, i]/√2</td><td>|−i⟩ = [1, −i]/√2</td></tr></table></div>
+<p>These three matrices are called the <b>Pauli matrices</b>. They come up everywhere in quantum computing.</p>
+<h3>Why they matter in quantum computing</h3>
+<div class="grid"><div class="card"><b>Measurement</b><span>Every kind of measurement is described by a matrix. The possible results are its eigenvalues, and after measuring, the qubit is left in the matching eigenvector.</span></div><div class="card"><b>Bloch axes</b><span>The two ends of the z, x and y axes (Part 2) are the eigenvectors of σz, σx and σy. The + end has λ = +1, the − end has λ = −1.</span></div><div class="card"><b>Phase</b><span>When an eigenvalue has size 1, it only turns the phase of the arrow. The length, and so the chances, never change.</span></div></div>
+<div class="ex"><b>Example.</b> Measure |+⟩ with σz (the usual "0 or 1?" question). σz's eigenvectors are |0⟩ and |1⟩, and |+⟩ is an equal mix of them, so each is found with chance ½. You get +1 (meaning 0) or −1 (meaning 1), 50% each.</div></section>
+
+<section data-split="h4" class="s"><h2>3.6.1 Inner product: "how alike are two states?"</h2>
+<p>The <b>inner product</b> takes two states and gives back <b>one number</b> that says how much they overlap, in other words how alike they are. It is written <span class="m">⟨a|b⟩</span> (Part 4 explains this notation in detail).</p>
+
+<p><b>The idea in a picture.</b> Draw each state as an arrow of length 1. Shine a light straight down onto arrow a and look at the shadow that arrow b casts along it. The length of that shadow is the inner product:</p>
+<ul><li>Arrows pointing the same way: the shadow is the full length, so the overlap is <b>1</b>.</li>
+<li>Arrows at right angles: there is no shadow at all, so the overlap is <b>0</b>.</li>
+<li>Anything in between gives a number between 0 and 1.</li></ul>
+<p><b>Try it:</b> turn arrow b and watch its shadow on arrow a.</p>
+<div class="ip"><svg id="ipS" viewBox="-20 -130 260 150" role="img" aria-label="Two arrows; the shadow of one on the other shows the inner product">
+<line x1="-15" y1="0" x2="235" y2="0" stroke="var(--bd)"/>
+<line id="ipP" stroke="var(--mu)" stroke-dasharray="4 4"/>
+<line id="ipSh" stroke="#d9830b" stroke-width="9" stroke-linecap="round" opacity=".55"/>
+<line x1="0" y1="0" x2="200" y2="0" stroke="var(--a2)" stroke-width="4" stroke-linecap="round"/><text x="206" y="18" fill="var(--a2)" font-size="15" font-weight="700">a</text>
+<line id="ipB" x1="0" y1="0" stroke="var(--ac)" stroke-width="4" stroke-linecap="round"/><text id="ipBt" fill="var(--ac)" font-size="15" font-weight="700">b</text></svg>
+<div><label class="lbl" for="ipA">Angle between the arrows: <b id="ipAv"></b></label><input id="ipA" type="range" min="0" max="180" value="60">
+<div class="ex" id="ipO" aria-live="polite"></div><div class="bar"><i id="ipBar"></i></div></div></div>
+<div class="note">In this picture |0⟩ and |1⟩ sit at right angles, because they share nothing. On the Bloch sphere (Part 2) the same two states appear at opposite poles. The Bloch sphere doubles every angle, so "at right angles" here becomes "opposite" there.</div>
+
+<h4>Step 1: the recipe</h4>
+<p>Write the first state as a <b>row</b> and the second as a <b>column</b>. Multiply the top numbers together, multiply the bottom numbers together, then add the two results.</p>
+<div class="ex"><b>Example.</b> a = [1, 0] (the state |0⟩) and b = [0.6, 0.8].<br>
+⟨a|b⟩ = (<span class="k1">1 × 0.6</span>) + (<span class="k2">0 × 0.8</span>) = 0.6 + 0 = <b>0.6</b><br>
+So |0⟩ and b overlap by 0.6.</div>
+
+<h4>Step 2: what the number means</h4>
+<div class="grid"><div class="card"><b>1</b><span>The same state.</span></div><div class="card"><b>0</b><span>Completely different (<i>orthogonal</i>). One measurement can always tell them apart.</span></div><div class="card"><b>In between</b><span>Partly alike.</span></div></div>
+<p>Square the overlap and you get a <b>chance</b>: |⟨a|b⟩|² is the chance that a qubit in state b gives the answer "a" when you check for a. In the example, 0.6² = 0.36, so b gives 0 with a 36% chance. This is exactly the rule from 3.3 (chance = amplitude squared), now working for <i>any</i> two states, not just |0⟩ and |1⟩.</p>
+
+<h4>Step 3: the extra rule for complex numbers</h4>
+<p>If the first state contains complex numbers, flip the sign of every <i>i</i> in it before multiplying. This is called taking the <b>conjugate</b>: 0.5 + 0.3i becomes 0.5 − 0.3i.</p>
+<p><b>Why bother?</b> A state must overlap fully with itself (⟨ψ|ψ⟩ = 1, a total chance of 100%). Without the flip, this goes wrong:</p>
+<div class="ex">Take |+i⟩ = [0.707, 0.707i] and compare it with itself.<br>
+<b>Without</b> the flip: 0.707 × 0.707 + 0.707i × 0.707i = 0.5 + 0.5 × (i × i) = 0.5 − 0.5 = <b>0</b>. That says the state is completely different from itself, which is nonsense.<br>
+<b>With</b> the flip: 0.707 × 0.707 + (−0.707i) × 0.707i = 0.5 + 0.5 = <b>1</b>. Correct.</div>
+
+<h4>Step 4: worked examples</h4>
+<div class="ex">⟨0|0⟩ = 1·1 + 0·0 = <b>1</b>: identical.<br>⟨0|1⟩ = 1·0 + 0·1 = <b>0</b>: orthogonal, perfectly distinguishable.<br>⟨0|+⟩ = 1·0.707 + 0·0.707 = 0.707, so chance = 0.707² = <b>50%</b>.<br>⟨+|−⟩ = 0.707·0.707 + 0.707·(−0.707) = 0.5 − 0.5 = <b>0</b>: orthogonal, even though both are 50/50 mixes.<br>⟨+|+i⟩ = 0.707·0.707 + 0.707·(0.707i) = 0.5 + 0.5i, so chance = |0.5 + 0.5i|² = 0.5² + 0.5² = <b>50%</b>.</div>
+
+<h4>Two useful facts</h4>
+<ul><li><b>Every valid state overlaps fully with itself:</b> ⟨ψ|ψ⟩ = 1. This is the same as saying its chances add up to 100%.</li>
+<li><b>Order barely matters:</b> swapping the two states, ⟨b|a⟩ instead of ⟨a|b⟩, can only flip the signs of the <i>i</i> parts. The chance stays the same.</li></ul>
+
+</section>
+
+<section data-split="h4" class="s"><h2>3.6.2 Tensor product: "combining systems"</h2>
+<p>So far we have described one qubit at a time. The <b>tensor product</b>, written <span class="m">⊗</span>, is how we describe <b>two or more qubits together</b> as one system.</p>
+
+<p><b>The idea in everyday terms.</b> A café offers 2 starters and 2 mains. How many different meals can you order? 2 × 2 = 4, because every starter can go with every main. Two qubits work the same way. Each one can be 0 or 1, so together there are four possible results: <b>00, 01, 10 and 11</b>. The tensor product makes a list with one amplitude for each of those combinations.</p>
+<p>And just as the chance of flipping heads <i>and</i> rolling a six is ½ × ⅙, the amplitude of each combination is simply the <b>two amplitudes multiplied</b>.</p>
+
+<h4>Step 1: the recipe</h4>
+<p>Take qubit A = [a, b] and qubit B = [c, d]. Make a grid with A down the side and B across the top, and fill each box by multiplying:</p>
+<div class="tw"><table class="tg"><tr><th></th><th>B is 0 (c)</th><th>B is 1 (d)</th></tr>
+<tr><th>A is 0 (a)</th><td>a·c → <b>|00⟩</b></td><td>a·d → <b>|01⟩</b></td></tr>
+<tr><th>A is 1 (b)</th><td>b·c → <b>|10⟩</b></td><td>b·d → <b>|11⟩</b></td></tr></table></div>
+<p>Then read the boxes row by row to get the combined list: <span class="m" style="white-space:normal">[a, b] ⊗ [c, d] = [a·c, a·d, b·c, b·d]</span>.</p>
+<p>The label on each box is just "A's value, then B's value". So the <b>first digit always belongs to the first qubit</b> and the second digit to the second qubit.</p>
+
+<h4>Step 2: worked examples</h4>
+<div class="ex"><b>A. Two definite qubits.</b> |0⟩ ⊗ |1⟩ = [1, 0] ⊗ [0, 1] = [1·0, 1·1, 0·0, 0·1] = [0, 1, 0, 0].<br>
+The only non-zero box is 01, so this is <b>|01⟩</b>: "A is 0 and B is 1", for certain.</div>
+<div class="ex"><b>B. Order matters.</b> |1⟩ ⊗ |0⟩ = [0, 1] ⊗ [1, 0] = [0·1, 0·0, 1·1, 1·0] = [0, 0, 1, 0] = <b>|10⟩</b>. That's a different state from A, because now it's the first qubit that is 1.</div>
+<div class="ex"><b>C. One mixed qubit.</b> [0.6, 0.8] ⊗ [1, 0] = [0.6·1, 0.6·0, 0.8·1, 0.8·0] = [0.6, 0, 0.8, 0].<br>
+Chances: 00 → 0.6² = 36%, 10 → 0.8² = 64%, and 01 and 11 → 0%. They add up to 100%. Qubit B is always 0, and qubit A keeps its own 36/64 odds.</div>
+<div class="ex"><b>D. Two 50/50 qubits.</b> |+⟩ ⊗ |+⟩ = [0.707, 0.707] ⊗ [0.707, 0.707] = [0.5, 0.5, 0.5, 0.5].<br>
+Each of the four results has chance 0.5² = <b>25%</b>, just like two fair coins.</div>
+
+<h4>Try it: combine two qubits</h4>
+<p>Tilt each qubit between 0 and 1. The grid shows each box being multiplied, and the bars show the chance of each combined result.</p>
+<div class="two"><div><label class="lbl" for="tpA">Qubit A: <b id="tpAv"></b></label><input id="tpA" type="range" min="0" max="180" value="60"></div><div><label class="lbl" for="tpB">Qubit B: <b id="tpBv"></b></label><input id="tpB" type="range" min="0" max="180" value="90"></div></div>
+<div class="tw"><table class="tg" id="tpG"></table></div>
+<div id="tpBars" class="rg"></div>
+
+<h4>Step 3: more qubits</h4>
+<p>For three qubits, apply the recipe again: (A ⊗ B) ⊗ C. Each new qubit <b>doubles</b> the list, because every existing combination can now end in 0 or 1. So 2 qubits give 4 entries, 3 give 8, and n qubits give 2ⁿ (see 3.8).</p>
+<div class="ex">|0⟩ ⊗ |1⟩ ⊗ |1⟩ = <b>|011⟩</b>: a list of 8 numbers with a single 1 in it. The 1 sits in position 3 (counting from 0), because 011 in binary is 3.</div>
+
+<h4>Step 4: matrices combine too</h4>
+<p>Matrices can be combined with ⊗ in the same way. For example, A ⊗ I is a 4×4 matrix meaning "apply A to the first qubit and leave the second alone" (I is the do-nothing identity from 3.4).</p>
+
+<h4>Step 5: not every state can be split</h4>
+<p>Every tensor product gives a valid two-qubit state, but the reverse is not true: <b>some two-qubit states can't be written as one qubit ⊗ another</b>.</p>
+<div class="ex"><b>The Bell state</b> (|00⟩ + |11⟩)/√2 = [0.707, 0, 0, 0.707]. Try to write it as [a, b] ⊗ [c, d] = [a·c, a·d, b·c, b·d]. Matching the boxes means:<br>
+a·c = 0.707 and b·d = 0.707 (both non-zero), but also a·d = 0 and b·c = 0.<br>
+If a·d = 0, then either a = 0 (which makes a·c = 0, wrong) or d = 0 (which makes b·d = 0, wrong). There is no way out.</div>
+<p>So these two qubits can't be described separately. Only the pair as a whole has a definite state. Such qubits are called <b>entangled</b> (3.9).</p>
+</section>
+
+<section class="s"><h2>3.6.3 Unitary matrices: "rotations that lose nothing"</h2>
+<p>A matrix U is <b>unitary</b> if it can always be undone by a simple partner, written U† ("U-dagger"): U†·U = I. To get U†, flip U over its diagonal (rows become columns) and take the conjugate of every number.</p><p>A unitary matrix does two things: it (1) keeps the total chance at exactly 100% and (2) can always be reversed. A quick test: each column has length 1, and any two columns are orthogonal. On the Bloch sphere, a unitary matrix is simply a rotation. Every change to a quantum state (every quantum gate) is a unitary matrix.</p>
+<div class="ex"><b>Check mixer A.</b> Columns (1, 1)/√2 and (1, −1)/√2 each have length 1, and their inner product is 0.5 − 0.5 = 0. ✓ Also A·A = ½ [[1+1, 1−1], [1−1, 1+1]] = [[1, 0], [0, 1]] = I. <b>Check swap and sign-flip.</b> Both give I when applied twice. ✓</div>
+<div class="ex"><b>Not unitary:</b> <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>2</i><i>0</i><i>0</i><i>1</i></span> stretches [1, 0] to [2, 0], so probabilities would add to more than 100%. And <span class="mat" style="grid-template-columns:repeat(2,auto)"><i>1</i><i>0</i><i>0</i><i>0</i></span> wipes [0, 1] out to nothing, so it cannot be reversed (information is lost). This second one is a lot like a measurement, which is why measuring a qubit can't be undone.</div></section>
+
+<section class="s"><h2>3.7 Interference</h2>
+<p>Because amplitudes can be negative, they can cancel each other out, just like waves. This is called <b>interference</b>. Quantum algorithms are designed so the paths leading to wrong answers cancel and the paths leading to the right answer add up, a bit like noise-cancelling headphones. This, not "trying every answer at once", is the real source of quantum speed.</p>
+<div class="ex"><b>Example.</b> Take |0⟩ = [1, 0] and apply the mixer A from 3.4: you get the 50/50 mix [0.707, 0.707]. Now apply A again. The second entry gets two contributions, +0.5 and −0.5, which cancel to 0. The first entry gets +0.5 and +0.5, which add to 1. You are back at [1, 0], a sure 0 (A·A = I). The 50/50 mix turned into a certain answer through interference.</div></section>
+
+<section class="s"><h2>3.8 Many qubits: 2ⁿ growth</h2>
+<p>Each extra qubit doubles the number of amplitudes needed to describe the system (see 3.6.2). Two qubits need 4 (for 00, 01, 10, 11), three need 8, and n qubits need <span class="m">2ⁿ</span>.</p>
+<div class="ex"><b>Example.</b> 10 qubits → 1,024 amplitudes. 50 qubits → about a quadrillion. 300 qubits → more numbers than atoms in the observable universe. This is why normal computers can't keep up when they try to simulate large quantum computers.</div></section>
+
+<section class="s"><h2>3.9 Entanglement</h2>
+<p>Some groups of qubits can't be described one qubit at a time; only the group as a whole has a definite state (3.6.2). Such qubits are <b>entangled</b>. The classic example is the <b>Bell state</b> <span class="m">(|00⟩ + |11⟩)/√2</span>: when you measure, you get "both 0" or "both 1", each half the time, but never a mismatch.</p>
+<div class="ex"><b>Example.</b> Imagine two coins sent to two different cities. Each lands heads or tails at random, yet whenever both are tossed they always land the same way. With ordinary coins you could explain this by them being rigged in advance. With entangled qubits, experiments show the result truly is not decided until someone looks, yet the two always match. This still can't be used to send messages faster than light, because neither side can choose what result they get.</div></section>
+
+<section class="s"><h2>3.10 Cheat sheet</h2>
+<div class="tw"><table><tr><th>Concept</th><th>Plain meaning</th><th>Quantum use</th><th>Where</th></tr>
+<tr><td>Vector (ket |ψ⟩)</td><td>List of numbers / arrow</td><td>Qubit state</td><td>3.1</td></tr>
+<tr><td>Complex number</td><td>Size + direction (phase)</td><td>Amplitude</td><td>3.2</td></tr>
+<tr><td>Amplitude²</td><td>Chance</td><td>Measurement probability</td><td>3.3</td></tr>
+<tr><td>Matrix</td><td>Machine that transforms arrows; columns show where [1, 0] and [0, 1] go</td><td>Describes changes to a state</td><td>3.4</td></tr>
+<tr><td>Matrix chain</td><td>Apply right-most first; order matters</td><td>Sequences of operations</td><td>3.4</td></tr>
+<tr><td>Identity / inverse</td><td>Does nothing / undoes a matrix</td><td>Reversibility</td><td>3.4</td></tr>
+<tr><td>Eigenvector / eigenvalue</td><td>Arrow that keeps its direction / its stretch factor</td><td>Measurement outcomes (±1) and the states left behind</td><td>3.5</td></tr>
+<tr><td>Pauli matrices σx, σy, σz</td><td>Swap, and two relatives of sign-flip</td><td>Their eigenvectors are the ends of the Bloch axes</td><td>3.5</td></tr>
+<tr><td>Inner product ⟨a|b⟩</td><td>Overlap of two states</td><td>|⟨a|b⟩|² = probability; 0 means orthogonal</td><td>3.6.1</td></tr>
+<tr><td>Tensor product ⊗</td><td>List all combinations</td><td>Multi-qubit systems (2ⁿ amplitudes)</td><td>3.6.2, 3.8</td></tr>
+<tr><td>Unitary matrix (U†U = I)</td><td>Rotation that loses nothing</td><td>The only changes allowed to a quantum state</td><td>3.6.3</td></tr>
+<tr><td>Interference</td><td>Waves adding up or cancelling out</td><td>Boosts right answers, cancels wrong ones</td><td>3.7</td></tr>
+<tr><td>Entanglement</td><td>Qubits that can only be described together</td><td>Perfectly linked results; a key ingredient of quantum algorithms</td><td>3.9</td></tr></table></div></section>
+<div class="pn"><a href="part2.html">← Part 2</a><a href="part4.html">Part 4 →</a></div></main></div>
+
+<script src="js/part3.js"></script>
+<script src="js/site.js"></script>
+</body></html>
