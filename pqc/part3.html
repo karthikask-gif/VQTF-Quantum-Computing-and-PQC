@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Part 3 · Other Families | VQTF PQC and Quantum Cryptography</title>
+<link rel="stylesheet" href="css/style.css">
+</head><body>
+<nav class="top"><a href="index.html">Home</a><a href="part1.html">Part 1 · Foundations</a><a href="part2.html">Part 2 · Lattice Cryptography</a><a href="part3.html">Part 3 · Other Families</a><a href="part4.html">Part 4 · Deploying PQC</a><a href="part5.html">Part 5 · Quantum Crypto Basics</a><a href="part6.html">Part 6 · QKD</a></nav>
+
+<div class="pg" id="p-part3">
+<header class="hero">
+<svg class="anim" viewBox="0 0 300 200" role="img" aria-label="A grid of lattice points glowing around a padlock">
+<g fill="#7ff5ef"><circle class="lt" cx="40" cy="40" r="4"/><circle class="lt d2" cx="95" cy="55" r="4"/><circle class="lt d3" cx="150" cy="70" r="4"/><circle class="lt" cx="205" cy="85" r="4"/><circle class="lt d2" cx="260" cy="100" r="4"/>
+<circle class="lt d3" cx="25" cy="105" r="4"/><circle class="lt" cx="80" cy="120" r="4"/><circle class="lt d2" cx="245" cy="165" r="4"/><circle class="lt d3" cx="65" cy="185" r="4"/><circle class="lt" cx="120" cy="10" r="4"/><circle class="lt d2" cx="175" cy="25" r="4"/><circle class="lt d3" cx="230" cy="40" r="4"/><circle class="lt" cx="285" cy="55" r="4"/><circle class="lt d2" cx="10" cy="170" r="4"/><circle class="lt d3" cx="190" cy="150" r="4"/></g>
+<rect x="120" y="95" width="60" height="50" rx="8" fill="#ffd36b"/><path d="M132 95 v-14 a18 18 0 0 1 36 0 v14" fill="none" stroke="#ffd36b" stroke-width="7"/><circle cx="150" cy="117" r="6" fill="#2a1f8f"/><rect x="147" y="117" width="6" height="14" fill="#2a1f8f"/></svg>
+<h1>Part 3 · Other Families</h1><p>Hash-based, code-based, multivariate and isogeny cryptography.</p></header>
+<main>
+<section data-split="h3" class="s"><h2>3.1 Hash-based signatures: security from fingerprints alone</h2>
+<p class="lead">If you trust nothing else, you can still trust a good <b>hash function</b>. Hash-based signatures rely only on that, which makes them the most conservative choice.</p>
+<h3>Hash functions</h3>
+<p>A <b>hash function</b> turns any input into a short fixed-size fingerprint. Real ones such as SHA-256 have three properties:</p>
+<div class="grid"><div class="card"><b>Easy forward</b><span>Computing H(x) is fast.</span></div><div class="card"><b>One-way</b><span>Given a fingerprint, you can't find an input that produces it.</span></div><div class="card"><b>Collision-resistant</b><span>You can't find two inputs with the same fingerprint.</span></div></div>
+<p>For the numbers below we use a <b>toy hash</b>, H(x) = (x² + 7) mod 101. It is far too small to be secure, but it shows the mechanics.</p>
+
+<h3>Lamport one-time signature</h3>
+<p>Leslie Lamport's 1979 idea: for each message bit, prepare <b>two secret numbers</b> (one for "0", one for "1") and publish their hashes.</p>
+<div class="ex"><p><b>Private key</b> (2-bit messages): bit 1: (17, 42), bit 2: (63, 88).</p>
+<p><b>Public key</b> = hashes: H(17) = 94, H(42) = 54, H(63) = 37, H(88) = 75 → (94, 54), (37, 75).</p>
+<p><b>Sign the message 10:</b> bit 1 is 1, so reveal 42; bit 2 is 0, so reveal 63. Signature = (42, 63).</p>
+<p><b>Verify:</b> H(42) = 1764 + 7 = 1771 → 54 ✓ (bit 1's "1" slot). H(63) = 3976 → 37 ✓ (bit 2's "0" slot).</p>
+<p><b>Forging</b> "11" would need a number that hashes to 75. That means reversing the hash, which is impossible for a real hash.</p></div>
+<div class="note"><b>Only once!</b> After signing 10 and then 01, all four secrets are public and anyone can sign anything. That is why it is a <b>one-time</b> signature.</div>
+
+<h3>Shorter signatures with hash chains</h3>
+<p>Lamport signatures are large. <b>Winternitz</b> signatures sign several bits at once using a <b>chain</b>: hash the secret again and again.</p>
+<div class="ex"><p>Secret 5. Chain: 5 → H → 32 → H → 21 → H → 44. Public key = <b>44</b> (the end of the chain).</p>
+<p><b>Sign the digit 1:</b> reveal the value after 1 hash, <b>32</b>.</p>
+<p><b>Verify:</b> hash 32 two more times: 32 → 21 → 44 ✓ (1 + 2 = 3 steps in total).</p>
+<p>Anyone can walk forward along the chain, so a checksum digit is added to stop forgers from turning a 1 into a 2.</p></div>
+<svg class="pic wide" viewBox="0 0 560 100" role="img" aria-label="A hash chain 5, 32, 21, 44 with arrows labelled H" font-family="system-ui" font-size="14">
+<g fill="var(--sf)" stroke="var(--ac)" stroke-width="2"><rect x="20" y="30" width="70" height="40" rx="8"/><rect x="170" y="30" width="70" height="40" rx="8"/><rect x="320" y="30" width="70" height="40" rx="8"/><rect x="470" y="30" width="70" height="40" rx="8" stroke="var(--a2)"/></g>
+<g text-anchor="middle" font-weight="700" fill="var(--tx)"><text x="55" y="56">5</text><text x="205" y="56">32</text><text x="355" y="56">21</text><text x="505" y="56">44</text></g>
+<g stroke="var(--mu)" stroke-width="2"><line x1="92" y1="50" x2="166" y2="50"/><line x1="242" y1="50" x2="316" y2="50"/><line x1="392" y1="50" x2="466" y2="50"/></g>
+<g fill="var(--mu)" font-size="12" text-anchor="middle"><text x="130" y="42">H</text><text x="280" y="42">H</text><text x="430" y="42">H</text><text x="55" y="90">secret</text><text x="205" y="90">signature for 1</text><text x="505" y="90">public key</text></g>
+<circle class="hc" cx="55" cy="18" r="6" fill="var(--hv2)"/></svg>
+
+<h3>Merkle trees</h3>
+<p>One-time keys are awkward: you would need a new public key for every message. Ralph Merkle's fix: make many one-time key pairs, hash their public keys together in pairs, and keep hashing up to a single <b>root</b>. Only the root is published.</p>
+<svg class="pic wide" id="mkT" viewBox="0 0 560 240" role="img" aria-label="A Merkle tree with four leaves 94, 37, 12, 60 combining into nodes 16 and 96 and root 43; the path for leaf 37 is highlighted" font-family="system-ui" font-size="20">
+<g stroke="var(--mu)" stroke-width="2"><line x1="280" y1="50" x2="150" y2="110"/><line x1="280" y1="50" x2="410" y2="110"/><line x1="150" y1="130" x2="80" y2="190"/><line x1="150" y1="130" x2="220" y2="190"/><line x1="410" y1="130" x2="340" y2="190"/><line x1="410" y1="130" x2="480" y2="190"/></g>
+<g stroke-width="2.5"><rect x="245" y="20" width="70" height="34" rx="8" fill="var(--a2)" stroke="var(--a2)"/>
+<rect class="mk1" x="115" y="105" width="70" height="34" rx="8" fill="var(--sf)" stroke="var(--ac)"/><rect class="mk2" x="375" y="105" width="70" height="34" rx="8" fill="var(--sf)" stroke="var(--hv2)"/>
+<rect class="mk2" x="45" y="180" width="70" height="34" rx="8" fill="var(--sf)" stroke="var(--hv2)"/><rect class="mk0" x="185" y="180" width="70" height="34" rx="8" fill="var(--ac)" stroke="var(--ac)"/><rect x="305" y="180" width="70" height="34" rx="8" fill="var(--sf)" stroke="var(--bd)"/><rect x="445" y="180" width="70" height="34" rx="8" fill="var(--sf)" stroke="var(--bd)"/></g>
+<g text-anchor="middle" font-weight="700"><text x="280" y="44" fill="#fff">43</text><text x="150" y="129" fill="var(--tx)">16</text><text x="410" y="129" fill="var(--tx)">96</text><text x="80" y="204" fill="var(--tx)">94</text><text x="220" y="204" fill="#fff">37</text><text x="340" y="204" fill="var(--tx)">12</text><text x="480" y="204" fill="var(--tx)">60</text></g>
+<g fill="var(--mu)" font-size="15" text-anchor="middle"><text x="280" y="14">root = public key</text><text x="280" y="234">one-time public keys (leaves)</text></g></svg>
+<div class="ex"><p>Pair-hash rule (toy): H₂(x, y) = (3x + y) mod 101.</p>
+<p>H₂(94, 37) = 319 → <b>16</b>; H₂(12, 60) = 96 → <b>96</b>; root = H₂(16, 96) = 144 → <b>43</b>.</p>
+<p><b>Signing with leaf 2 (37):</b> send the one-time signature, the leaf 37, and its <b>authentication path</b>: the neighbours 94 and 96 (dashed orange).</p>
+<p><b>Verify:</b> H₂(94, 37) = 16, then H₂(16, 96) = 43 = root ✓.</p></div>
+<p>A tree of height h holds 2ʰ one-time keys, and each signature needs only h neighbours. <b>XMSS</b> and <b>LMS</b> are standardized versions; they are <b>stateful</b>: the signer must remember which leaves are used, because reusing one is fatal.</p>
+<h3>SLH-DSA (SPHINCS+): no memory needed</h3>
+<p><b>SLH-DSA</b> removes the state by using a <b>huge</b> tree of trees (a "hypertree") and picking the leaf from a hash of the message, so the same leaf is practically never chosen twice. It also uses a few-time signature (FORS) at the bottom.</p>
+<div class="two"><div class="card"><b>Strengths</b><span>Security rests only on hash functions, the best-understood tools in cryptography. Public key just 32 bytes.</span></div><div class="card"><b>Costs</b><span>Signatures of 7,856 bytes (small, slow version) to 17,088 bytes (fast version) at level 1, and signing is slower than ML-DSA.</span></div></div></section>
+
+<section data-split="h3" class="s"><h2>3.2 Code-based cryptography: hiding messages in errors</h2>
+<p class="lead">Phones, Wi-Fi and spacecraft all use <b>error-correcting codes</b> to repair bits damaged in transit. Robert McEliece realized in 1978 that this repair skill can be a secret key.</p>
+<h3>The Hamming(7,4) code</h3>
+<p>Richard Hamming's code turns 4 data bits into 7 by adding 3 <b>parity</b> checks (a parity bit says whether a group of bits holds an even or odd number of 1s), so that any single flipped bit can be found and fixed. Positions 1, 2 and 4 hold checks; positions 3, 5, 6 and 7 hold data.</p>
+<div class="ex"><p><b>Encode data 1011</b> (d₁ = 1, d₂ = 0, d₃ = 1, d₄ = 1):</p>
+<p>p₁ = d₁ ⊕ d₂ ⊕ d₄ = 0, p₂ = d₁ ⊕ d₃ ⊕ d₄ = 1, p₃ = d₂ ⊕ d₃ ⊕ d₄ = 0.</p>
+<p>Codeword (positions 1–7: p₁ p₂ d₁ p₃ d₂ d₃ d₄) = <b>0110011</b>.</p>
+<p><b>Noise flips position 6:</b> received 0110001.</p>
+<p><b>Decode:</b> check positions {1,3,5,7}: 0⊕1⊕0⊕1 = 0. Check {2,3,6,7}: 1⊕1⊕0⊕1 = 1. Check {4,5,6,7}: 0⊕0⊕0⊕1 = 1. Read the checks bottom-up as binary: 110 = <b>6</b>. Flip position 6 back. ✓</p></div>
+<h3>Try the Hamming lab</h3>
+<p>Tap the data bits to set them, then tap any bit of the codeword to flip it (simulating noise). The checks point straight at the damaged position.</p>
+<span class="lbl">Data (tap)</span><div class="bits" id="hmD"></div>
+<span class="lbl">Codeword received (tap a bit to flip it)</span><div class="bits" id="hmC"></div>
+<p id="hmO"></p>
+
+<h3>Syndrome decoding, the hard problem</h3>
+<p>The three check results form the <b>syndrome</b>. In Hamming's code the checks are arranged so the syndrome spells out the error's position in binary (110 = 6 above). That is the "hidden structure" that makes decoding instant.</p>
+<p>Now scramble the checks so they look random. The syndrome still exists, but it no longer points anywhere. To find the errors, Eve must try combinations of positions until the checks match. That is the <b>syndrome decoding problem</b>.</p>
+<div class="tw"><table class="tg"><tr><th>Code length n</th><th>Errors t</th><th>Combinations to try</th></tr>
+<tr><td>7</td><td>1</td><td>7</td></tr>
+<tr><td>100</td><td>5</td><td>75,287,520</td></tr>
+<tr><td>3,488 (Classic McEliece)</td><td>64</td><td>about 2⁴⁵⁶</td></tr></table></div>
+<p>Clever algorithms do better than trying everything, but for McEliece's sizes they still need around 2¹²⁸ steps, and quantum computers give only a modest (Grover-like) speed-up.</p>
+<h3>McEliece, errors as a lock</h3>
+<p>For small codes, anyone can decode. But for a huge, randomly scrambled code, decoding is extremely hard unless you know the hidden structure:</p>
+<ol><li><b>Private key:</b> a large code with a fast decoder (a "Goppa code" that can fix t errors), plus secret scrambling.</li>
+<li><b>Public key:</b> the scrambled code, which looks completely random.</li>
+<li><b>Encrypt:</b> turn the message into a codeword of the public code, then deliberately flip t random bits.</li>
+<li><b>Decrypt:</b> unscramble and use the fast decoder to remove the errors. Without the secret structure, Eve faces general decoding, a problem that has stayed hard for over 45 years.</li></ol>
+<div class="two"><div class="card"><b>Classic McEliece</b><span>Very well studied. Tiny ciphertexts (about 100 bytes) but enormous public keys: about 261 KB at level 1, over 1 MB at level 5.</span></div><div class="card"><b>HQC</b><span>Chosen by NIST in 2025 as a backup to ML-KEM, so that a surprise attack on lattices wouldn't leave the world without a standard. Keys and ciphertexts of a few KB.</span></div></div></section>
+
+<section data-split="h3" class="s"><h2>3.3 Multivariate and isogeny cryptography</h2>
+<p class="lead">Two more families round out the picture: one built on systems of equations, one on elliptic curves. Both have taught important lessons.</p>
+<h3>Multivariate equations</h3>
+<p>Solving one equation with one unknown is easy. Solving many <b>quadratic</b> equations (with terms like x₁·x₂) in many unknowns at once is very hard, even with bits only.</p>
+<div class="ex"><p><b>Toy public key</b> (bits, mod 2): P₁ = x₁x₂ + x₃ and P₂ = x₂x₃ + x₁.</p>
+<p><b>Sign the message (1, 1):</b> find bits x with P₁ = 1 and P₂ = 1. The signer, who knows a hidden shortcut, gives x = (1, 1, 0).</p>
+<p><b>Verify:</b> P₁ = 1·1 + 0 = 1 ✓, P₂ = 1·0 + 1 = 1 ✓. Checking is just plugging in.</p>
+<p>With 3 variables you could try all 8 options. Real schemes use around 100 variables: 2¹⁰⁰ options.</p></div>
+<h3>The MQ problem, trying every answer</h3>
+<p>Finding bits that solve such equations is the <b>MQ problem</b> (multivariate quadratic). With 3 bits, Eve can try all 2³ = 8 options:</p>
+<div class="tw"><table class="tg"><tr><th>x₁ x₂ x₃</th><th>P₁ = x₁x₂ + x₃</th><th>P₂ = x₂x₃ + x₁</th><th>Signs (1, 1)?</th></tr>
+<tr><td>000</td><td>0</td><td>0</td><td></td></tr><tr><td>001</td><td>1</td><td>0</td><td></td></tr><tr><td>010</td><td>0</td><td>0</td><td></td></tr><tr><td>011</td><td>1</td><td>1</td><td>✓</td></tr>
+<tr><td>100</td><td>0</td><td>1</td><td></td></tr><tr><td>101</td><td>1</td><td>1</td><td>✓</td></tr><tr><td>110</td><td>1</td><td>1</td><td>✓</td></tr><tr><td>111</td><td>0</td><td>0</td><td></td></tr></table></div>
+<p>Three answers work, and any one is a valid signature. Each extra variable doubles the table: 100 variables give 2¹⁰⁰ rows, far beyond any computer.</p>
+<h3>The oil-and-vinegar shortcut</h3>
+<p>The signer's equations secretly have two kinds of variables, <b>oil</b> (o) and <b>vinegar</b> (v), and never multiply oil by oil. Fixing the vinegar turns every equation into an easy <b>linear</b> one.</p>
+<div class="ex"><p><b>Example (mod 11):</b> solve 3·o·v + v² + o = 2.</p>
+<p>Pick vinegar v = 2: 6o + 4 + o = 2, so 7o = 2 − 4 = −2 = 9 (mod 11).</p>
+<p>Divide by 7, which mod 11 means multiply by 8 (since 7 × 8 = 56 = 55 + 1): o = 9 × 8 = 72 mod 11 = <b>6</b>.</p>
+<p><b>Check:</b> 3·6·2 + 2² + 6 = 36 + 4 + 6 = 46 = 44 + 2, so 46 mod 11 = <b>2</b> ✓.</p></div>
+<p>The signer's shortcut is a secret, easy-to-solve system disguised by scrambling the variables. Schemes such as <b>UOV</b> ("unbalanced oil and vinegar") have short signatures but large public keys. <b>Rainbow</b>, a 2020 NIST finalist, was broken in 2022 by a weekend's computing on a laptop, a reminder that new schemes need years of testing.</p>
+<h3>Isogenies</h3>
+<p>An <b>isogeny</b> is a special map from one elliptic curve (1.2) to another. Picture a vast network of curves connected by such maps: walking a random path is easy, but finding <i>a</i> path between two given curves seems very hard, even for quantum computers.</p>
+<svg class="pic wide" viewBox="0 0 560 160" role="img" aria-label="A network of curves joined by links, with a highlighted path being walked" font-family="system-ui" font-size="12">
+<g stroke="var(--bd)" stroke-width="2"><line x1="40" y1="80" x2="120" y2="30"/><line x1="40" y1="80" x2="120" y2="130"/><line x1="120" y1="30" x2="220" y2="60"/><line x1="120" y1="130" x2="220" y2="110"/><line x1="220" y1="60" x2="320" y2="30"/><line x1="220" y1="110" x2="320" y2="130"/><line x1="220" y1="60" x2="220" y2="110"/><line x1="320" y1="30" x2="420" y2="70"/><line x1="320" y1="130" x2="420" y2="70"/><line x1="420" y1="70" x2="520" y2="40"/><line x1="420" y1="70" x2="520" y2="120"/></g>
+<polyline class="iso" points="40,80 120,130 220,110 220,60 320,30 420,70 520,120" fill="none" stroke="var(--ac)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+<g fill="var(--a2)"><circle cx="40" cy="80" r="9"/><circle cx="120" cy="30" r="9"/><circle cx="120" cy="130" r="9"/><circle cx="220" cy="60" r="9"/><circle cx="220" cy="110" r="9"/><circle cx="320" cy="30" r="9"/><circle cx="320" cy="130" r="9"/><circle cx="420" cy="70" r="9"/><circle cx="520" cy="40" r="9"/><circle cx="520" cy="120" r="9"/></g>
+<text x="40" y="108" text-anchor="middle" fill="var(--mu)">start</text><text x="520" y="148" text-anchor="middle" fill="var(--mu)">end</text></svg>
+<p>Isogeny schemes have the smallest keys of all. But the most famous one, <b>SIKE</b>, was broken in 2022 with a classical attack that took about an hour on a single computer, because its public keys revealed extra information. Newer designs such as <b>SQIsign</b> (very compact signatures) avoid that weakness and are still being studied.</p>
+<div class="note"><b>Lesson:</b> a scheme isn't trusted just because quantum computers can't break it. It must also survive years of classical attack. That is why NIST picked lattices plus backups from different families.</div></section>
+<div class="pn"><a href="part2.html">← Part 2</a><a href="part4.html">Part 4 →</a></div></main></div>
+
+<script src="js/part3.js"></script>
+<script src="js/site.js"></script>
+</body></html>

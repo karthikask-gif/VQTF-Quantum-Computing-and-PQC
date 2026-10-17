@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Part 6 · Quantum Key Distribution | VQTF PQC and Quantum Cryptography</title>
+<link rel="stylesheet" href="css/style.css">
+</head><body>
+<nav class="top"><a href="index.html">Home</a><a href="part1.html">Part 1 · Foundations</a><a href="part2.html">Part 2 · Lattice Cryptography</a><a href="part3.html">Part 3 · Other Families</a><a href="part4.html">Part 4 · Deploying PQC</a><a href="part5.html">Part 5 · Quantum Crypto Basics</a><a href="part6.html">Part 6 · QKD</a></nav>
+
+<div class="pg" id="p-part6">
+<header class="hero">
+<svg class="anim" viewBox="0 0 300 200" role="img" aria-label="Alice sends single photons to Bob while Eve watches the line">
+<line x1="40" y1="90" x2="260" y2="90" stroke="#ffffff" stroke-opacity=".45" stroke-width="2" stroke-dasharray="6 5"/>
+<circle cx="30" cy="90" r="20" fill="#ffd36b"/><text x="30" y="96" text-anchor="middle" font-family="system-ui" font-size="16" font-weight="700" fill="#2a1f8f">A</text>
+<circle cx="270" cy="90" r="20" fill="#7ff5ef"/><text x="270" y="96" text-anchor="middle" font-family="system-ui" font-size="16" font-weight="700" fill="#2a1f8f">B</text>
+<g class="ph"><circle cx="50" cy="90" r="9" fill="#fff"/><text x="50" y="95" text-anchor="middle" font-size="13" fill="#2a1f8f">↑</text></g>
+<g class="ph d2"><circle cx="50" cy="90" r="9" fill="#fff"/><text x="50" y="95" text-anchor="middle" font-size="13" fill="#2a1f8f">↗</text></g>
+<g class="ph d3"><circle cx="50" cy="90" r="9" fill="#fff"/><text x="50" y="95" text-anchor="middle" font-size="13" fill="#2a1f8f">→</text></g>
+<circle cx="150" cy="160" r="18" fill="#ff9ad5"/><text x="150" y="166" text-anchor="middle" font-family="system-ui" font-size="15" font-weight="700" fill="#2a1f8f">E</text>
+<path class="ent" d="M150 140 L150 102" stroke="#ff9ad5" stroke-width="2" stroke-dasharray="3 4"/></svg>
+<h1>Part 6 · Quantum Key Distribution</h1><p>Sharing a secret key with single photons, and catching anyone who listens.</p></header>
+<main>
+<section data-split="h3" class="s"><h2>6.1 Quantum key distribution: the BB84 protocol</h2>
+<p class="lead"><b>Quantum key distribution (QKD)</b> lets Alice and Bob grow a shared random key, ready for a one-time pad, so that any eavesdropping is detected. The first and most famous recipe is <b>BB84</b> (Charles Bennett and Gilles Brassard, 1984).</p>
+<h3>Qubits made of light</h3>
+<p>QKD sends qubits as single <b>photons</b>, the smallest possible pieces of light. A light wave wiggles in some direction as it travels; this direction is its <b>polarization</b>. Polarized sunglasses work by only letting one direction through.</p>
+<p>BB84 uses four directions, grouped into two bases (5.1):</p>
+<svg class="pic wide" viewBox="0 0 560 170" role="img" aria-label="The plus basis uses horizontal for 0 and vertical for 1; the cross basis uses 45 degrees for 0 and 135 degrees for 1" font-family="system-ui" font-size="13">
+<rect x="20" y="10" width="250" height="150" rx="12" fill="var(--sf)" stroke="var(--bd)"/><rect x="290" y="10" width="250" height="150" rx="12" fill="var(--sf)" stroke="var(--bd)"/>
+<text x="145" y="34" text-anchor="middle" fill="var(--ac)" font-weight="700">"+" basis (straight)</text><text x="415" y="34" text-anchor="middle" fill="var(--a2)" font-weight="700">"×" basis (diagonal)</text>
+<g stroke="var(--ac)" stroke-width="4" stroke-linecap="round"><line class="wig" x1="55" y1="90" x2="115" y2="90"/><line class="wig" x1="200" y1="60" x2="200" y2="120"/></g>
+<g stroke="var(--a2)" stroke-width="4" stroke-linecap="round"><line class="wig" x1="330" y1="115" x2="380" y2="65"/><line class="wig" x1="450" y1="65" x2="500" y2="115"/></g>
+<g fill="var(--tx)" text-anchor="middle"><text x="85" y="145">→ = 0 = |0⟩</text><text x="200" y="145">↑ = 1 = |1⟩</text><text x="355" y="145">↗ = 0 = |+⟩</text><text x="475" y="145">↖ = 1 = |−⟩</text></g></svg>
+<p>Measuring a photon in the <b>same</b> basis it was sent in gives the right bit every time. Measuring in the <b>other</b> basis gives a random result, 50/50, and destroys the original (5.1). Just like |0⟩ measured in the +/− basis.</p>
+
+<h3>The four steps of BB84</h3>
+<svg class="pic wide" viewBox="0 0 560 120" role="img" aria-label="Photons travel from Alice to Bob, each with a different polarization" font-family="system-ui" font-size="13">
+<circle cx="40" cy="60" r="26" fill="#ffd36b"/><text x="40" y="66" text-anchor="middle" font-size="16" font-weight="700" fill="#2a1f8f">A</text>
+<circle cx="520" cy="60" r="26" fill="#7ff5ef"/><text x="520" y="66" text-anchor="middle" font-size="16" font-weight="700" fill="#2a1f8f">B</text>
+<line x1="70" y1="60" x2="490" y2="60" stroke="var(--bd)" stroke-width="2"/>
+<g class="ph2"><circle cx="80" cy="60" r="13" fill="var(--ac)"/><text x="80" y="65" text-anchor="middle" fill="#fff" font-size="15">↑</text></g>
+<g class="ph2 d2"><circle cx="80" cy="60" r="13" fill="var(--a2)"/><text x="80" y="65" text-anchor="middle" fill="#fff" font-size="15">↗</text></g>
+<g class="ph2 d3"><circle cx="80" cy="60" r="13" fill="var(--ac)"/><text x="80" y="65" text-anchor="middle" fill="#fff" font-size="15">→</text></g>
+<g class="ph2 d4"><circle cx="80" cy="60" r="13" fill="var(--a2)"/><text x="80" y="65" text-anchor="middle" fill="#fff" font-size="15">↖</text></g>
+<text x="280" y="110" text-anchor="middle" fill="var(--mu)">quantum channel: one photon at a time</text></svg>
+<ol><li><b>Send.</b> For each photon Alice picks a random bit and a random basis, and sends the matching polarization.</li>
+<li><b>Measure.</b> Bob doesn't know her bases, so he picks a random basis for each photon and measures.</li>
+<li><b>Sift.</b> Over an ordinary public channel they compare <b>bases only</b> (never the bits). They keep the bits where the bases matched (about half) and throw away the rest. The kept bits are the <b>sifted key</b>.</li>
+<li><b>Check.</b> They publicly compare a small random sample of the sifted key. If too many differ, someone was listening (6.3, 6.4).</li></ol>
+<div class="note">The public channel may be heard by Eve, but it must be <b>authenticated</b>: Bob must be sure he is really talking to Alice. A small shared starter key does this, so QKD actually "grows" a long key from a short one.</div>
+
+<h3>Worked example, 10 photons</h3>
+<div class="tw"><table class="tg"><tr><th>Photon</th><th>1</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th></tr>
+<tr><td>Alice's bit</td><td>1</td><td>0</td><td>1</td><td>1</td><td>0</td><td>0</td><td>1</td><td>0</td><td>1</td><td>1</td></tr>
+<tr><td>Alice's basis</td><td>+</td><td>×</td><td>×</td><td>+</td><td>+</td><td>×</td><td>+</td><td>×</td><td>×</td><td>+</td></tr>
+<tr><td>Photon sent</td><td>↑</td><td>↗</td><td>↖</td><td>↑</td><td>→</td><td>↗</td><td>↑</td><td>↗</td><td>↖</td><td>↑</td></tr>
+<tr><td>Bob's basis</td><td>+</td><td>+</td><td>×</td><td>×</td><td>+</td><td>×</td><td>×</td><td>×</td><td>+</td><td>+</td></tr>
+<tr><td>Bob's result</td><td>1</td><td>1*</td><td>1</td><td>0*</td><td>0</td><td>0</td><td>0*</td><td>0</td><td>1*</td><td>1</td></tr>
+<tr><td>Same basis?</td><td>✓</td><td>✗</td><td>✓</td><td>✗</td><td>✓</td><td>✓</td><td>✗</td><td>✓</td><td>✗</td><td>✓</td></tr>
+<tr><td><b>Sifted key</b></td><td><b>1</b></td><td></td><td><b>1</b></td><td></td><td><b>0</b></td><td><b>0</b></td><td></td><td><b>0</b></td><td></td><td><b>1</b></td></tr></table></div>
+<p>* = wrong basis, so Bob's result was a coin toss. Those columns are thrown away. The bases matched for photons 1, 3, 5, 6, 8 and 10, so both Alice and Bob now hold the sifted key <b>110001</b>. Eve heard the bases being compared, but not the bits.</p>
+
+<h3>BB84 simulator</h3>
+<p>Send 16 photons and watch the sifting. Then switch Eve on: she measures each photon in a random basis and resends what she saw. Compare the error rate.</p>
+<div class="lb"><span class="mu">Eve:</span><button data-ev="0" class="go">Off</button><button data-ev="1">On (intercept and resend)</button></div>
+<div class="lb"><button id="bbS" class="go">Send 16 photons</button><button id="bbK">Send 10,000 photons</button></div>
+<div class="tw"><table class="tg bb" id="bbT"></table></div>
+<p id="bbO"></p></section>
+
+<section data-split="h3" class="s"><h2>6.2 QKD protocols and their types</h2>
+<p class="lead">BB84 started a whole family of protocols. They differ in what is sent and where the security comes from.</p>
+<h3>Two big families</h3>
+<div class="two"><div class="card"><b>Prepare-and-measure</b><span>Alice <i>prepares</i> each qubit and sends it; Bob <i>measures</i> it. Examples: BB84, B92, six-state.</span></div><div class="card"><b>Entanglement-based</b><span>A source in the middle sends one half of an entangled pair (5.1) to each of them. Examples: E91, BBM92.</span></div></div>
+<svg class="pic wide" viewBox="0 0 560 150" role="img" aria-label="Top: Alice sends to Bob. Bottom: a source in the middle sends entangled halves to both" font-family="system-ui" font-size="13">
+<text x="10" y="22" fill="var(--mu)">Prepare-and-measure</text>
+<circle cx="60" cy="50" r="18" fill="#ffd36b"/><text x="60" y="55" text-anchor="middle" font-weight="700" fill="#2a1f8f">A</text><circle cx="500" cy="50" r="18" fill="#7ff5ef"/><text x="500" y="55" text-anchor="middle" font-weight="700" fill="#2a1f8f">B</text>
+<line x1="80" y1="50" x2="480" y2="50" stroke="var(--bd)" stroke-width="2"/><circle class="pulse" cx="100" cy="50" r="7" fill="var(--ac)"/>
+<text x="10" y="92" fill="var(--mu)">Entanglement-based</text>
+<circle cx="60" cy="120" r="18" fill="#ffd36b"/><text x="60" y="125" text-anchor="middle" font-weight="700" fill="#2a1f8f">A</text><circle cx="500" cy="120" r="18" fill="#7ff5ef"/><text x="500" y="125" text-anchor="middle" font-weight="700" fill="#2a1f8f">B</text>
+<rect x="255" y="105" width="50" height="30" rx="6" fill="var(--sf)" stroke="var(--ac)" stroke-width="2"/><text x="280" y="125" text-anchor="middle" fill="var(--ac)" font-size="12">source</text>
+<line x1="80" y1="120" x2="255" y2="120" stroke="var(--bd)" stroke-width="2"/><line x1="305" y1="120" x2="480" y2="120" stroke="var(--bd)" stroke-width="2"/>
+<g class="pa2"><circle cx="255" cy="120" r="7" fill="var(--a2)"/></g><g class="pb2"><circle cx="305" cy="120" r="7" fill="var(--a2)"/></g></svg>
+
+<h3>B92 with just two states</h3>
+<p>Bennett showed in 1992 that two polarizations are enough, as long as they are not opposite: Alice sends <b>→ for 0</b> and <b>↗ for 1</b>. Bob measures in a random basis and only keeps results that are <b>impossible for one of the two states</b>:</p>
+<div class="ex"><p>Bob measures in + and gets <b>↑</b>. A → photon never gives ↑ in the + basis, so Alice must have sent ↗: the bit is <b>1</b>, for sure.</p>
+<p>Bob measures in × and gets <b>↖</b>. A ↗ photon never gives ↖, so she sent →: the bit is <b>0</b>.</p>
+<p>Any other result (→ or ↗) could have come from either state, so it is discarded. Chance of a keepable result: ½ (right basis to rule one out) × ½ (the outcome lands on the "impossible" side) = <b>25%</b>.</p></div>
+<p>B92 is simpler to build but wastes more photons than BB84 (which keeps 50%).</p>
+
+<h3>Six-state protocol</h3>
+<p>This protocol adds a third basis, the circular one, matching the y-axis of the Bloch sphere (|+i⟩ and |−i⟩, 5.1). Only 1 in 3 bases match, so fewer bits survive sifting. In exchange Eve is easier to catch:</p>
+<div class="ex">Intercept-resend (6.3) with three bases: Eve picks the wrong basis 2/3 of the time, and then Bob's bit is wrong half the time: 2/3 × 1/2 = <b>33% errors</b>, compared with 25% in BB84.</div>
+
+<h3>E91 and BBM92: using entanglement</h3>
+<p>In <b>E91</b> (Artur Ekert, 1991) a source sends each of them one half of a Bell pair Φ⁺ (5.1). When they happen to measure in the same direction, their results always match, so these become key bits. Results from <i>different</i> directions aren't wasted: they are used for a <b>Bell test</b> (6.7), which proves that nobody has tampered with the pairs.</p>
+<p><b>BBM92</b> (1992) is the entangled version of BB84: both sides measure their half in + or × at random and sift just like BB84.</p>
+<div class="note">A neat bonus: with entanglement, the key doesn't exist anywhere until Alice and Bob measure. Not even the source knows it.</div>
+
+<h3>More ways to sort them</h3>
+<div class="tw"><table><tr><th>Type</th><th>Idea</th><th>Why it matters</th></tr>
+<tr><td><b>Discrete-variable</b></td><td>Single photons, counted one by one (BB84, E91…)</td><td>The classic approach, needs single-photon detectors</td></tr>
+<tr><td><b>Continuous-variable</b></td><td>Encodes in the strength and timing of laser light</td><td>Works with ordinary telecom equipment</td></tr>
+<tr><td><b>Decoy-state</b></td><td>BB84 plus random weaker "decoy" pulses</td><td>Defeats the photon-splitting attack (6.3); used in most real systems</td></tr>
+<tr><td><b>Measurement-device-independent (MDI)</b></td><td>Both send to an untrusted relay in the middle</td><td>Blocks all attacks on Bob's detectors</td></tr>
+<tr><td><b>Device-independent (DI)</b></td><td>Security from the Bell test alone</td><td>No need to trust the equipment at all (6.7)</td></tr></table></div>
+<p>QKD is already in use: city fibre networks exist in several countries, and in 2017 the Chinese satellite Micius shared entangled photons between ground stations about 1,200 km apart.</p></section>
+
+<section data-split="h3" class="s"><h2>6.3 Eavesdropping strategies: what Eve can try</h2>
+<p class="lead">Eve wants to learn the key without being noticed. Here are her main options, from simplest to most powerful, and why each one leaves traces.</p>
+<h3>Intercept and resend</h3>
+<p>Eve catches each photon, measures it in a random basis, and sends Bob a new photon matching what she saw. Follow one photon from the sifted key (where Alice and Bob used the same basis):</p>
+<svg class="pic wide" viewBox="0 0 560 210" role="img" aria-label="Probability tree: half the time Eve picks the right basis and causes no error; half the time she picks the wrong one, and then Bob gets an error half the time; total error 25 percent" font-family="system-ui" font-size="13">
+<g stroke="var(--mu)" stroke-width="2" fill="none"><path d="M70 105 L220 50"/><path d="M70 105 L220 160"/><path d="M300 160 L430 125"/><path d="M300 160 L430 195"/></g>
+<rect x="10" y="88" width="64" height="34" rx="8" fill="var(--sf)" stroke="var(--ac)"/><text x="42" y="110" text-anchor="middle" fill="var(--tx)">photon</text>
+<rect x="220" y="32" width="160" height="36" rx="8" fill="var(--sf)" stroke="var(--a2)"/><text x="300" y="55" text-anchor="middle" fill="var(--tx)">Eve: right basis</text>
+<rect x="220" y="142" width="80" height="36" rx="8" fill="var(--sf)" stroke="#e0576b"/><text x="260" y="165" text-anchor="middle" fill="var(--tx)">wrong basis</text>
+<rect x="430" y="107" width="120" height="34" rx="8" fill="var(--sf)" stroke="var(--a2)"/><text x="490" y="129" text-anchor="middle" fill="var(--tx)">Bob still right</text>
+<rect x="430" y="178" width="120" height="30" rx="8" fill="#e0576b" opacity=".85"/><text x="490" y="198" text-anchor="middle" fill="#fff" font-weight="700">ERROR</text>
+<g fill="var(--mu)" font-size="12"><text x="120" y="66">½</text><text x="120" y="152">½</text><text x="350" y="134">½</text><text x="350" y="194">½</text><text x="388" y="55">→ no error</text></g></svg>
+<div class="ex"><b>The numbers.</b> Chance of an error = ½ (Eve picks the wrong basis) × ½ (Bob's measurement then lands on the wrong bit) = <b>¼ = 25%</b>. In a 1,000-bit sifted key, about 250 bits would differ. Meanwhile Eve knows only the bits where she happened to pick the right basis: about half.</div>
+<p>If Eve only attacks a fraction f of the photons, the error rate is f ÷ 4. Try it:</p>
+<div class="lb"><label class="th">Eve intercepts <b id="ivV"></b><input id="ivF" type="range" min="0" max="100" value="40" aria-label="Fraction intercepted"></label></div>
+<span class="lbl" id="ivL1"></span><div class="bar"><i id="ivB1"></i></div>
+<span class="lbl" id="ivL2"></span><div class="bar"><i class="b" id="ivB2"></i></div>
+<p id="ivO"></p>
+
+<h3>Photon-number splitting</h3>
+<p>Real QKD often uses a very dim laser instead of a perfect single-photon source. Now and then a pulse contains <b>two</b> photons with the same polarization. Eve can split one off, keep it, and let the other reach Bob untouched: <b>no errors at all</b>.</p>
+<div class="ex"><b>How often?</b> With an average of 0.1 photons per pulse, the laws of chance (a Poisson distribution) give: 90.5% of pulses are empty, 9.05% hold one photon, and 0.47% hold two or more. So among pulses that carry anything, about <b>1 in 20</b> can be split.</div>
+<p><b>The fix: decoy states.</b> Alice randomly mixes in pulses of different brightness. Eve can't tell decoys from real pulses, so if she favours multi-photon pulses, the detection rates of the decoys come out wrong and she is caught.</p>
+
+<h3>Cloning and smarter attacks</h3>
+<div class="grid"><div class="card"><b>Approximate cloning</b><span>Eve uses the best possible imperfect copier (5.4). She keeps one copy and forwards the other, but the forwarded copy is only about 83% faithful, causing errors.</span></div><div class="card"><b>Individual attacks</b><span>Eve probes each photon on its own and measures her probe immediately (intercept-resend is one).</span></div><div class="card"><b>Collective attacks</b><span>Eve attaches a quantum probe to each photon, stores all probes in a quantum memory, and measures them together after hearing the public discussion.</span></div><div class="card"><b>Coherent attacks</b><span>The most general: anything quantum physics allows, on all photons together. Modern security proofs cover even these.</span></div></div>
+<div class="note">The key fact behind every security proof: <b>information gained by Eve always costs disturbance</b>. The more she learns, the higher the error rate Alice and Bob see.</div>
+
+<h3>Attacks around the physics</h3>
+<div class="two"><div class="card"><b>Man in the middle</b><span>Eve pretends to be Bob to Alice and Alice to Bob. Stopped by authenticating the public channel (6.1).</span></div><div class="card"><b>Side channels and hacking</b><span>Attacking the real equipment: blinding Bob's detectors with bright light, or shining light into Alice's device to read its settings (a "Trojan horse"). Stopped by careful engineering, and by MDI and device-independent QKD (6.2).</span></div></div></section>
+
+<section data-split="h3" class="s"><h2>6.4 Error rate estimation: is anyone listening?</h2>
+<p class="lead">After sifting, Alice and Bob must find out how many of their bits disagree. That number is their eavesdropping alarm.</p>
+<h3>The quantum bit error rate (QBER)</h3>
+<p>The <b>QBER</b> is the fraction of sifted bits where Bob's bit differs from Alice's:</p>
+<p class="m lstate">QBER = number of mismatched bits ÷ number of bits compared</p>
+<p>To estimate it they publicly compare a <b>random sample</b> of the sifted key, then throw those bits away (Eve heard them).</p>
+<div class="ex"><b>Example.</b> 1,000 sifted bits. They compare 100 bits chosen at random and find 3 that differ. Estimated QBER = 3 ÷ 100 = <b>3%</b>. The remaining 900 bits are kept for the key.</div>
+<p>Even with no Eve, real equipment gives a few percent of errors from noise in the fibre and imperfect detectors. Alice and Bob can't tell noise from Eve, so they play safe: <b>every error is assumed to be Eve's work</b>.</p>
+
+<h3>How much can a sample be trusted?</h3>
+<p>A sample is like a poll: it gives an estimate, not the exact value. The bigger the sample, the closer the estimate. A rough guide for the "wobble" is <span class="m" style="white-space:normal">√(Q × (1 − Q) ÷ n)</span>:</p>
+<div class="ex">With Q = 3% and n = 100 compared bits: √(0.03 × 0.97 ÷ 100) ≈ <b>1.7%</b>, so the true rate is likely between about 0% and 6.4% (within two wobbles). With n = 10,000 the wobble is just 0.17%.</div>
+<p>Try sampling yourself. Set the true error rate (normally unknown), then sample.</p>
+<div class="lb"><label class="th">True QBER <b id="saV"></b><input id="saQ" type="range" min="0" max="30" value="5" aria-label="True error rate"></label></div>
+<div class="lb"><button data-sa2="20">Sample 20 bits</button><button data-sa2="100" class="go">Sample 100 bits</button><button data-sa2="1000">Sample 1,000 bits</button><button id="saR">Clear</button></div>
+<svg class="p8c" id="saC" viewBox="0 0 400 200" role="img" aria-label="Estimates from repeated samples compared with the true error rate and the 11 percent limit"></svg>
+<p id="saO"></p>
+
+<h3>Continue or abort?</h3>
+<div class="two"><div class="card"><b>QBER below about 11%</b><span>Keep going. Error correction (6.5) and privacy amplification (6.6) can still produce a key that is perfectly secret.</span></div><div class="card"><b>QBER above about 11%</b><span>Abort. Eve may know too much, and no secret key can be extracted. Try again later or use another line.</span></div></div>
+<p>Where 11% comes from is shown in 6.6. For comparison: a full intercept-resend attack causes 25%, far above the limit.</p></section>
+
+<section data-split="h3" class="s"><h2>6.5 Information reconciliation: fixing the errors</h2>
+<p class="lead">If the QBER is acceptable, Alice's and Bob's keys are <i>almost</i> the same. <b>Information reconciliation</b> finds and fixes the few differences by talking over the public channel, without revealing the key itself.</p>
+<div class="note">Order of the steps: reconciliation comes <b>before</b> privacy amplification, because the error-fixing chat leaks a little information that must be removed afterwards.</div>
+<h3>Parity checks</h3>
+<p>The <b>parity</b> of a block of bits is whether it has an even (0) or odd (1) number of 1s.</p>
+<div class="ex"><b>Example.</b> Block 1011 has three 1s: odd, so parity = 1. Block 1001 has two: even, parity = 0.<br>If Alice's and Bob's blocks have <b>different parities</b>, the blocks must differ in an odd number of places (most likely one).</div>
+
+<h3>Worked example, binary search</h3>
+<p>Alice has 10110010 and Bob has 10100010 (one error, which they don't yet know about).</p>
+<div class="ex"><p><b>1. Whole block:</b> Alice's key has four 1s (even, parity 0). Bob's has three 1s (odd, parity 1). <b>Different</b>, so there is an error somewhere.</p>
+<p><b>2. Split in half.</b> First halves: Alice 1011 (parity 1), Bob 1010 (parity 0). Different, so the error is in the first half.</p>
+<p><b>3. Split again.</b> Alice 10 (parity 1), Bob 10 (parity 1). Same, so the error is in the other quarter: Alice 11, Bob 10.</p>
+<p><b>4. Last split.</b> Bit 3: both 1, same. So the error is <b>bit 4</b>. Bob flips it: 10110010. ✓</p>
+<p>Total parities announced: 4 (one per step).</p></div>
+<p>Each announced parity is a bit of information Eve also hears. Finding one error among 2ᵏ bits takes about k parities.</p>
+
+<h3>Hunt the error</h3>
+<p>Bob's 16-bit key has one hidden error. Press <b>Compare parity</b> to halve the search area each time.</p>
+<div class="bits rec" id="rcA"></div><div class="bits rec" id="rcB"></div>
+<div class="lb"><button id="rcS" class="go">Compare parity</button><button id="rcN">New keys</button></div>
+<p id="rcO"></p>
+
+<h3>Cascade and the cost of talking</h3>
+<p>A single parity can't spot <b>two</b> errors in the same block (two flips leave the parity unchanged). The <b>Cascade</b> protocol fixes this by shuffling the bits and repeating the search several times with different block sizes. Modern systems often use error-correcting codes called <b>LDPC codes</b> instead, which work the same way in spirit.</p>
+<div class="ex"><b>The minimum cost.</b> Shannon showed that fixing errors at rate Q needs at least <b>h(Q) public bits per key bit</b> (5.3). With 900 bits at Q = 3%: h(0.03) ≈ 0.194, so at least 900 × 0.194 ≈ <b>175 bits</b> leak to Eve. Real methods leak a bit more.</div></section>
+
+<section data-split="h3" class="s"><h2>6.6 Privacy amplification: squeezing out Eve's knowledge</h2>
+<p class="lead">Alice and Bob now share identical keys, but Eve may know part of them: from eavesdropping (counted by the QBER) and from the parities in reconciliation. <b>Privacy amplification</b> turns this long, partly-known key into a shorter key that Eve knows <b>nothing</b> about.</p>
+<h3>The idea with two bits</h3>
+<p>Suppose the key is two bits x₁x₂ and Eve knows x₁ but not x₂. Alice and Bob replace the two bits with one: <b>x₁ ⊕ x₂</b>.</p>
+<div class="tw"><table class="tg"><tr><th>Eve knows x₁ =</th><th>x₂ (unknown to Eve)</th><th>New key x₁ ⊕ x₂</th></tr>
+<tr><td>1</td><td>0</td><td>1</td></tr><tr><td>1</td><td>1</td><td>0</td></tr></table></div>
+<p>Since x₂ is a fair coin to Eve, the new bit is a fair coin too. Eve's knowledge of x₁ has become useless. The price: the key got shorter.</p>
+
+<h3>Hashing a whole key</h3>
+<p>For long keys, Alice and Bob agree publicly on a random <b>hash</b>: a mixing rule that turns many bits into fewer, where every output bit depends on many input bits. A simple kind is a table of random 0s and 1s (called a <b>matrix</b>): each output bit is the parity of the key bits picked out by one row.</p>
+<div class="ex"><p>Key K = <b>1 0 1 1 0 1 0 0</b> (8 bits) → 4-bit final key.</p>
+<p>Row 1 = 1 1 0 1 0 0 1 0 picks bits 1, 2, 4, 7 = 1, 0, 1, 0: two 1s, even → <b>0</b></p>
+<p>Row 2 = 1 0 1 1 0 0 0 1 picks bits 1, 3, 4, 8 = 1, 1, 1, 0: three 1s, odd → <b>1</b></p>
+<p>Row 3 = 0 1 0 0 1 1 1 0 picks bits 2, 5, 6, 7 = 0, 0, 1, 0: one 1, odd → <b>1</b></p>
+<p>Row 4 = 0 0 1 0 0 1 1 1 picks bits 3, 6, 7, 8 = 1, 1, 0, 0: two 1s, even → <b>0</b></p>
+<p>Final key = <b>0110</b>. If Eve knew up to about 4 of the 8 bits, she knows essentially nothing about these 4.</p></div>
+<p>The rule: <b>shrink the key by at least as many bits as Eve might know</b>, plus a small safety margin.</p>
+
+<h3>How long is the final key?</h3>
+<p>For BB84, with error rate Q, Eve's possible knowledge is about h(Q) bits per key bit, and reconciliation leaks another h(Q). So the fraction of secret bits left is:</p>
+<p class="m lstate">secret key fraction r = 1 − 2·h(Q)</p>
+<div class="ex">Q = 3%: h = 0.194, so r = 1 − 0.388 = <b>0.61</b>. 61% of the bits survive.<br>Q = 11%: h ≈ 0.50, so r ≈ 1 − 1.0 = <b>0</b>. Nothing survives. That is where the 11% limit (6.4) comes from.</div>
+
+<h3>The whole pipeline in numbers</h3>
+<p>Follow 10,000 photons from sending to a finished key. Drag the error rate to see the effect.</p>
+<div class="lb"><label class="th">QBER <b id="kpV"></b><input id="kpQ" type="range" min="0" max="15" step="0.5" value="3" aria-label="Error rate"></label></div>
+<div id="kpBars"></div>
+<p id="kpO"></p></section>
+
+<section data-split="h3" class="s"><h2>6.7 Bell inequalities in cryptographic security</h2>
+<p class="lead">In 1964 John Bell found a test that tells true entanglement apart from any "pre-planned" imitation. In cryptography it becomes a lie detector: it proves that nobody, not even the maker of the equipment, could know the key.</p>
+<h3>The question Bell asked</h3>
+<p>Measure a Bell pair (5.1) and the results are perfectly linked. Could the two particles simply have <b>agreed on their answers in advance</b>, like twins with a shared script? Such pre-planned answers are called <b>local hidden variables</b>. Einstein suspected something like this. Bell showed it can be tested.</p>
+<p>If answers were pre-planned, Eve could have planned them too, or could know the plan. So ruling out pre-planned answers also rules out Eve knowing the key.</p>
+
+<h3>The CHSH game</h3>
+<p>The most-used form of Bell's test is the <b>CHSH inequality</b> (Clauser, Horne, Shimony and Holt, 1969). Each round:</p>
+<ol><li>Alice measures her particle in one of two directions, <b>a</b> or <b>a′</b>, chosen at random. Bob does the same with <b>b</b> or <b>b′</b>.</li>
+<li>Each result is +1 or −1.</li>
+<li>Over many rounds they compute the <b>correlation</b> E for each pair of settings: the average of (Alice's result × Bob's result). E = +1 means always equal, −1 always opposite, 0 no link.</li></ol>
+<p>Then they combine the four correlations:</p>
+<p class="m lstate">S = E(a,b) + E(a,b′) + E(a′,b) − E(a′,b′)</p>
+
+<h3>Pre-planned answers can't beat 2</h3>
+<p>Suppose each particle carries fixed answers A, A′ (for Alice's two settings) and B, B′ (for Bob's), each +1 or −1. For one pair:</p>
+<p class="m lstate">A·B + A·B′ + A′·B − A′·B′ = A·(B + B′) + A′·(B − B′)</p>
+<div class="ex"><p>Either B = B′, so (B + B′) = ±2 and (B − B′) = 0, or B = −B′, so (B + B′) = 0 and (B − B′) = ±2.</p>
+<p>Either way the total is ±2. Example: A = A′ = B = B′ = +1 gives 1 + 1 + 1 − 1 = <b>2</b>.</p>
+<p>Averaging over many pairs can't beat the largest single value, so <b>S ≤ 2</b> for any pre-planned scheme. This is Bell's inequality.</p></div>
+
+<h3>Quantum pairs reach 2.83</h3>
+<p>For the Bell pair Φ⁺, measured along directions at angles on the Bloch circle (5.1), the correlation is <b>E = cos(angle between the directions)</b>. Choose a = 0°, a′ = 90°, b = 45°, b′ = −45°:</p>
+<div class="two"><svg class="pic" viewBox="-130 -130 260 260" role="img" aria-label="Four measurement directions: Alice at 0 and 90 degrees, Bob at 45 and minus 45 degrees" font-family="system-ui" font-size="14">
+<circle r="100" fill="none" stroke="var(--bd)" stroke-width="2" stroke-dasharray="4 4"/>
+<g stroke-width="4" stroke-linecap="round"><line x2="0" y2="-100" stroke="#d9830b"/><line x2="100" y2="0" stroke="#d9830b"/><line x2="70.7" y2="-70.7" stroke="var(--a2)"/><line x2="-70.7" y2="-70.7" stroke="var(--a2)"/></g>
+<g font-weight="700"><text x="-10" y="-108" fill="#d9830b">a 0°</text><text x="104" y="5" fill="#d9830b">a′</text><text x="76" y="-76" fill="var(--a2)">b</text><text x="-100" y="-76" fill="var(--a2)">b′</text></g>
+<text x="0" y="125" text-anchor="middle" fill="var(--mu)" font-size="12">orange: Alice · teal: Bob</text></svg>
+<div class="ex"><p>E(a,b) = cos 45° = 0.707</p><p>E(a,b′) = cos 45° = 0.707</p><p>E(a′,b) = cos 45° = 0.707</p><p>E(a′,b′) = cos 135° = −0.707</p>
+<p>S = 0.707 + 0.707 + 0.707 − (−0.707) = <b>2.83</b> (= 2√2)</p></div></div>
+<p>2.83 is bigger than 2: no pre-planned script can produce these results. This has been confirmed in many experiments, including "loophole-free" tests in 2015, and earned the 2022 Nobel Prize in Physics (Aspect, Clauser and Zeilinger).</p>
+
+<h3>Why it protects the key</h3>
+<div class="grid"><div class="card"><b>Entanglement is monogamous</b><span>If Alice's and Bob's particles are maximally linked (S ≈ 2.83), there is no link left over for a third party. Eve can't be correlated with their results.</span></div><div class="card"><b>Eve pushes S down</b><span>If Eve measures the particles on their way (intercept-resend), she breaks the entanglement and S falls to about 1.41, well below 2.</span></div><div class="card"><b>Trust no device</b><span>Device-independent QKD checks only that S > 2. Even if the equipment came from Eve's factory, a high S proves the key is private.</span></div></div>
+
+<h3>Run a Bell test</h3>
+<p>Choose a source and run 1,000 rounds with random settings. Watch whether S crosses the classical limit of 2.</p>
+<div class="lb"><span class="mu">Source:</span><button data-bs="q" class="go">Entangled pairs</button><button data-bs="e">Eve intercepts</button><button data-bs="c">Pre-planned answers</button></div>
+<div class="lb"><button id="blR" class="go">Run 1,000 rounds</button></div>
+<svg class="p8c" id="blC" viewBox="0 0 400 200" role="img" aria-label="Measured CHSH value S compared with the classical limit 2 and the quantum maximum 2.83"></svg>
+<p class="m lstate" id="blE"></p><p id="blO"></p></section>
+
+<section class="s"><h2>6.8 Summary: from photons to a secret key</h2>
+<svg class="pic wide" viewBox="0 0 560 130" role="img" aria-label="The QKD pipeline: send photons, sift, estimate errors, reconcile, amplify privacy, secret key" font-family="system-ui" font-size="12">
+<g fill="var(--sf)" stroke="var(--ac)" stroke-width="2"><rect x="4" y="30" width="80" height="50" rx="8"/><rect x="96" y="30" width="80" height="50" rx="8"/><rect x="188" y="30" width="80" height="50" rx="8"/><rect x="280" y="30" width="80" height="50" rx="8"/><rect x="372" y="30" width="88" height="50" rx="8"/></g><rect x="472" y="30" width="84" height="50" rx="8" fill="var(--a2)"/>
+<g text-anchor="middle" fill="var(--tx)"><text x="44" y="52">Send</text><text x="44" y="68" fill="var(--mu)">photons</text><text x="136" y="52">Sift</text><text x="136" y="68" fill="var(--mu)">same basis</text><text x="228" y="52">Estimate</text><text x="228" y="68" fill="var(--mu)">QBER</text><text x="320" y="52">Reconcile</text><text x="320" y="68" fill="var(--mu)">fix errors</text><text x="416" y="52">Amplify</text><text x="416" y="68" fill="var(--mu)">privacy</text><text x="514" y="60" fill="#fff" font-weight="700">Secret key</text></g>
+<circle class="flow8" cx="44" cy="105" r="6" fill="var(--a2)"/><line x1="44" y1="105" x2="514" y2="105" stroke="var(--bd)" stroke-dasharray="4 4"/></svg>
+<div class="tw"><table><tr><th>Idea</th><th>What it says</th><th>Its job in QKD</th></tr>
+<tr><td><b>Classical models</b></td><td>Symmetric needs a shared key; public-key relies on hard maths</td><td>QKD supplies the shared key without hard-maths assumptions</td></tr>
+<tr><td><b>Information-theoretic security</b></td><td>One-time pad: unbreakable even with unlimited computing</td><td>The goal: a key Eve knows nothing about</td></tr>
+<tr><td><b>No-cloning</b></td><td>Unknown qubits can't be copied</td><td>Eve can't copy photons; she must disturb them</td></tr>
+<tr><td><b>QKD protocols</b></td><td>BB84, B92, six-state, E91, BBM92, CV, MDI, DI</td><td>Ways to send and measure the qubits</td></tr>
+<tr><td><b>Eavesdropping</b></td><td>Intercept-resend (25%), splitting, cloning, collective, coherent</td><td>Every attack that learns something causes errors</td></tr>
+<tr><td><b>Error estimation</b></td><td>QBER from a public sample; abort above ~11%</td><td>The alarm</td></tr>
+<tr><td><b>Reconciliation</b></td><td>Parity checks (Cascade, LDPC) fix differences</td><td>Makes the keys identical; leaks ≈ h(Q) per bit</td></tr>
+<tr><td><b>Privacy amplification</b></td><td>Hashing shrinks the key</td><td>Removes Eve's partial knowledge; rate 1 − 2h(Q)</td></tr>
+<tr><td><b>Bell inequalities</b></td><td>S ≤ 2 classically, up to 2.83 quantum</td><td>Certifies entanglement and rules out Eve</td></tr></table></div>
+<div class="note">QKD protects key <b>distribution</b>; the key is then used in a one-time pad or a strong symmetric cipher such as AES. Its limits today are distance (photons get lost in fibre, so links reach a few hundred kilometres without trusted relay stations), cost, and the need for authentication. That is why post-quantum cryptography and QKD are seen as partners rather than rivals.</div></section>
+<div class="pn"><a href="part5.html">← Part 5</a><a href="index.html">Contents</a></div></main></div>
+
+<script src="js/part6.js"></script>
+<script src="js/site.js"></script>
+</body></html>

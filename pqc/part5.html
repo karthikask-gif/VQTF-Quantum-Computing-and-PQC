@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Part 5 · Quantum Cryptography Basics | VQTF PQC and Quantum Cryptography</title>
+<link rel="stylesheet" href="css/style.css">
+</head><body>
+<nav class="top"><a href="index.html">Home</a><a href="part1.html">Part 1 · Foundations</a><a href="part2.html">Part 2 · Lattice Cryptography</a><a href="part3.html">Part 3 · Other Families</a><a href="part4.html">Part 4 · Deploying PQC</a><a href="part5.html">Part 5 · Quantum Crypto Basics</a><a href="part6.html">Part 6 · QKD</a></nav>
+
+<div class="pg" id="p-part5">
+<header class="hero">
+<svg class="anim" viewBox="0 0 300 200" role="img" aria-label="Alice sends single photons to Bob while Eve watches the line">
+<line x1="40" y1="90" x2="260" y2="90" stroke="#ffffff" stroke-opacity=".45" stroke-width="2" stroke-dasharray="6 5"/>
+<circle cx="30" cy="90" r="20" fill="#ffd36b"/><text x="30" y="96" text-anchor="middle" font-family="system-ui" font-size="16" font-weight="700" fill="#2a1f8f">A</text>
+<circle cx="270" cy="90" r="20" fill="#7ff5ef"/><text x="270" y="96" text-anchor="middle" font-family="system-ui" font-size="16" font-weight="700" fill="#2a1f8f">B</text>
+<g class="ph"><circle cx="50" cy="90" r="9" fill="#fff"/><text x="50" y="95" text-anchor="middle" font-size="13" fill="#2a1f8f">↑</text></g>
+<g class="ph d2"><circle cx="50" cy="90" r="9" fill="#fff"/><text x="50" y="95" text-anchor="middle" font-size="13" fill="#2a1f8f">↗</text></g>
+<g class="ph d3"><circle cx="50" cy="90" r="9" fill="#fff"/><text x="50" y="95" text-anchor="middle" font-size="13" fill="#2a1f8f">→</text></g>
+<circle cx="150" cy="160" r="18" fill="#ff9ad5"/><text x="150" y="166" text-anchor="middle" font-family="system-ui" font-size="15" font-weight="700" fill="#2a1f8f">E</text>
+<path class="ent" d="M150 140 L150 102" stroke="#ff9ad5" stroke-width="2" stroke-dasharray="3 4"/></svg>
+<h1>Part 5 · Quantum Cryptography Basics</h1><p>The quantum ideas behind physics-based security, and why copying a qubit is impossible.</p></header>
+<main>
+<section data-split="h3" class="s"><h2>5.1 Quantum toolkit: qubits, bases and entanglement</h2>
+<p class="lead">Quantum cryptography uses the laws of physics instead of hard maths. This section gives the handful of quantum ideas it needs, building on the spinning-coin picture of a qubit from 1.1.</p>
+<h3>Kets and amplitudes</h3>
+<p>Physicists write quantum states inside a <b>ket</b>, a bar and an angle bracket: <b>|0⟩</b> and <b>|1⟩</b> are the qubit's two basic states.</p>
+<p>A qubit in <b>superposition</b> is written a|0⟩ + b|1⟩. The numbers a and b are <b>amplitudes</b>. When you look, you get 0 with chance a² and 1 with chance b², and the chances add to 1.</p>
+<div class="ex"><p><b>Example.</b> |+⟩ = 0.71|0⟩ + 0.71|1⟩. Chance of 0 = 0.71² ≈ <b>0.5</b>, chance of 1 ≈ <b>0.5</b>: a fair coin.</p>
+<p>|−⟩ = 0.71|0⟩ − 0.71|1⟩ gives the same 50/50 odds. The minus sign (the <b>phase</b>) does not change the odds here, but it makes |−⟩ a genuinely different state from |+⟩.</p></div>
+
+<h3>States as arrows on the Bloch circle</h3>
+<svg class="pic" style="max-width:240px" viewBox="0 0 220 200" role="img" aria-label="Bloch circle: 0 up, 1 down, plus right, minus left, with a rotating state arrow" font-family="system-ui" font-size="15">
+<circle cx="110" cy="100" r="70" fill="none" stroke="var(--bd)" stroke-width="2"/><line x1="110" y1="25" x2="110" y2="175" stroke="var(--bd)"/><line x1="35" y1="100" x2="185" y2="100" stroke="var(--bd)"/>
+<g fill="var(--tx)" font-weight="700" text-anchor="middle"><text x="110" y="18">|0⟩</text><text x="110" y="195">|1⟩</text><text x="202" y="105">|+⟩</text><text x="18" y="105">|−⟩</text></g>
+<g transform="translate(110 100)"><g class="sweep slow"><line x1="0" y1="0" x2="0" y2="-66" stroke="var(--ac)" stroke-width="4" stroke-linecap="round"/><circle cx="0" cy="-66" r="5" fill="var(--ac)"/></g></g></svg>
+<p>Each state can be drawn as an arrow: |0⟩ points up, |1⟩ down, |+⟩ right and |−⟩ left. Opposite arrows are states that can be told apart perfectly. In full 3D this circle becomes the <b>Bloch sphere</b>, whose third axis holds two more states, <b>|+i⟩</b> and <b>|−i⟩</b> (pointing toward and away from you).</p>
+<div class="ex"><b>Angles give odds.</b> If two arrows are an angle θ apart, the chance one state "looks like" the other is cos²(θ/2). |0⟩ and |+⟩ are 90° apart: cos²(45°) = <b>0.5</b>. |0⟩ and |1⟩ are 180° apart: cos²(90°) = <b>0</b>.</div>
+
+<h3>Bases and measurement</h3>
+<p>A <b>basis</b> is a pair of opposite arrows you choose to measure along. The two used most are:</p>
+<div class="two"><div class="card"><b>Z basis (+ shape)</b><span>|0⟩ and |1⟩: up and down</span></div><div class="card"><b>X basis (× shape)</b><span>|+⟩ and |−⟩: right and left</span></div></div>
+<p><b>Measuring</b> forces the qubit to pick one arrow of the basis, with the odds above, and the qubit then <b>collapses</b>: it becomes the arrow it picked and forgets its old state.</p>
+<div class="tw"><table><tr><th>State</th><th>Measured in Z</th><th>Measured in X</th></tr>
+<tr><td>|0⟩</td><td>always 0</td><td>+ or − (50/50)</td></tr>
+<tr><td>|+⟩</td><td>0 or 1 (50/50)</td><td>always +</td></tr></table></div>
+<div class="note">Measuring in the wrong basis gives a random answer <b>and</b> destroys the original state. This one fact is the heart of quantum key distribution.</div>
+
+<h3>Two qubits and gates</h3>
+<p>Two qubits have four basic states: |00⟩, |01⟩, |10⟩, |11⟩. To combine two separate qubits, multiply them out like brackets in algebra (this is called the <b>tensor product</b>):</p>
+<div class="ex">|+⟩|0⟩ = (0.71|0⟩ + 0.71|1⟩)|0⟩ = <b>0.71|00⟩ + 0.71|10⟩</b></div>
+<p>A <b>gate</b> is an operation that changes qubits. Gates are <b>linear</b>: they act on each part of a superposition separately and keep the amplitudes. The <b>CNOT</b> gate flips the second qubit when the first is 1, so the second becomes a ⊕ b:</p>
+<div class="tw"><table><tr><th>In</th><th>|00⟩</th><th>|01⟩</th><th>|10⟩</th><th>|11⟩</th></tr><tr><td>Out</td><td>|00⟩</td><td>|01⟩</td><td>|11⟩</td><td>|10⟩</td></tr></table></div>
+
+<h3>Entanglement and Bell states</h3>
+<p>Some two-qubit states can't be split into "first qubit times second qubit". They are <b>entangled</b>. The most famous is the <b>Bell state</b>:</p>
+<div class="ex"><p>Φ⁺ = 0.71|00⟩ + 0.71|11⟩</p><p>Each qubit alone is a fair coin (50/50). But measured in the same basis, the two results <b>always match</b>: 00 or 11, never 01 or 10, even if the qubits are far apart.</p></div>
+<svg class="pic" style="max-width:280px" viewBox="0 0 260 90" role="img" aria-label="Two entangled qubits linked by a dashed line always give matching results" font-family="system-ui" font-size="15">
+<line x1="60" y1="45" x2="200" y2="45" stroke="var(--ac)" stroke-width="2" stroke-dasharray="5 5" class="ent"/>
+<circle cx="45" cy="45" r="26" fill="var(--ac)"/><circle cx="215" cy="45" r="26" fill="var(--a2)"/>
+<g class="f1" fill="#fff" font-weight="700" text-anchor="middle"><text x="45" y="51">0</text><text x="215" y="51">0</text></g>
+<g class="f2" fill="#fff" font-weight="700" text-anchor="middle"><text x="45" y="51">1</text><text x="215" y="51">1</text></g></svg>
+<p>There are four Bell states in all. Entangled pairs power the E91 protocol (6.2) and the Bell test (6.7).</p></section>
+
+<section data-split="h3" class="s"><h2>5.2 Classical cryptographic models: how secrets are kept today</h2>
+<p class="lead"><b>Cryptography</b> is the science of keeping messages secret.</p>
+<h3>Alice, Bob and Eve</h3><p>Every story in cryptography has the same three characters:</p>
+<svg class="pic wide" viewBox="0 0 560 170" role="img" aria-label="Alice sends a locked message to Bob along a line; Eve listens in from below" font-family="system-ui" font-size="13">
+<line x1="90" y1="60" x2="470" y2="60" stroke="var(--mu)" stroke-width="2"/>
+<circle cx="60" cy="60" r="30" fill="#ffd36b"/><text x="60" y="66" text-anchor="middle" font-size="18" font-weight="700" fill="#2a1f8f">A</text><text x="60" y="110" text-anchor="middle" fill="var(--tx)">Alice (sender)</text>
+<circle cx="500" cy="60" r="30" fill="#7ff5ef"/><text x="500" y="66" text-anchor="middle" font-size="18" font-weight="700" fill="#2a1f8f">B</text><text x="500" y="110" text-anchor="middle" fill="var(--tx)">Bob (receiver)</text>
+<g class="mail"><rect x="96" y="46" width="34" height="26" rx="4" fill="var(--ac)"/><path d="M106 46 v-6 a7 7 0 0 1 14 0 v6" fill="none" stroke="var(--ac)" stroke-width="3"/><text x="113" y="65" text-anchor="middle" fill="#fff" font-size="12">🔒</text></g>
+<circle cx="280" cy="130" r="24" fill="#ff9ad5"/><text x="280" y="136" text-anchor="middle" font-size="16" font-weight="700" fill="#2a1f8f">E</text><path class="ent" d="M280 106 V66" stroke="#ff9ad5" stroke-width="2" stroke-dasharray="3 4"/>
+<text x="320" y="135" fill="var(--tx)">Eve (eavesdropper)</text></svg>
+<p><b>Alice</b> wants to send a secret to <b>Bob</b>. <b>Eve</b> can see (and maybe change) everything that travels between them. The message before locking is the <b>plaintext</b>, the locked message is the <b>ciphertext</b>, and the secret number used to lock and unlock it is the <b>key</b>.</p>
+
+<h3>The method is public</h3>
+<p>In 1883 Auguste Kerckhoffs wrote down a rule still used today: <b>assume Eve knows exactly how your lock works</b>. Only the key is secret. Good locks are published and studied by everyone; if security depends on hiding the method, it breaks as soon as the method leaks.</p>
+<div class="grid"><div class="card"><b>Passive Eve</b><span>Only listens and copies what passes by.</span></div><div class="card"><b>Active Eve</b><span>Can also block, change or fake messages, or pretend to be Bob ("man in the middle").</span></div></div>
+
+<h3>Symmetric (shared-key) cryptography</h3>
+<p>Alice and Bob use the <b>same key</b> to lock and unlock, like a house key both of them carry. A simple lock is XOR (⊕, 1.1): add the key bit by bit.</p>
+<div class="ex"><b>Example.</b> Message 1011, key 0110.<br>Lock: 1011 ⊕ 0110 = <b>1101</b> (this is what Eve sees).<br>Unlock: 1101 ⊕ 0110 = 1011. XOR-ing the same key twice cancels out.</div>
+<p>Real systems such as <b>AES</b> mix the bits far more thoroughly, but the idea is the same. Symmetric locks are fast, and Grover's algorithm only weakens them a little (1.1).</p>
+<div class="note"><b>The catch: the key distribution problem.</b> Before they can talk secretly, Alice and Bob must already share a key. How do they agree on one if Eve hears everything they say? This is the problem quantum cryptography solves.</div>
+
+<h3>Public-key cryptography</h3>
+<p>Here each person has <b>two</b> keys: a <b>public key</b> that locks (anyone may have it) and a <b>private key</b> that unlocks (kept secret). It is like a padlock you hand out open: anyone can snap it shut, only you can open it. RSA (1.1) works this way.</p>
+<div class="ex"><b>Toy RSA with tiny numbers.</b> Bob picks primes 3 and 11, so N = 33. His public key is (N = 33, e = 3); his private key is d = 7.<br>
+Alice locks the message m = 4: 4³ = 64, and 64 mod 33 = <b>31</b>. She sends 31.<br>
+Bob unlocks: 31⁷ mod 33 = <b>4</b>. ✓ (31 is −2 on a 33-clock, and (−2)⁷ = −128, which wraps to 4.)<br>
+Eve sees N = 33 and 31. To find d she must factor 33 = 3 × 11, which is easy here but impossibly hard for a 600-digit N on an ordinary computer.</div>
+
+<h3>Two kinds of security</h3>
+<div class="two"><div class="card"><b>Computational security</b><span>"Breaking it would take too long." Safe only while nobody has a faster method or a faster computer. RSA is in this group, and Shor's algorithm is exactly such a faster method.</span></div><div class="card"><b>Information-theoretic security</b><span>"Breaking it is impossible, even with unlimited computing power, because the information simply isn't there." This is the gold standard, and the next section shows how it works.</span></div></div>
+<div class="note">Two answers to the quantum threat: <b>post-quantum cryptography</b> uses new kinds of maths that quantum computers can't easily break (still computational security). <b>Quantum cryptography</b>, the subject of this part, uses the laws of physics to reach information-theoretic security.</div></section>
+
+<section data-split="h3" class="s"><h2>5.3 Information-theoretic security: unbreakable in principle</h2>
+<p class="lead">Is there any lock that no amount of computing power can ever open? Yes, and it is surprisingly simple.</p>
+<h3>The one-time pad</h3>
+<p>Use the XOR lock from 5.2 with a key that follows three strict rules:</p>
+<div class="grid"><div class="card"><b>1. Truly random</b><span>Every key bit is a fair coin toss.</span></div><div class="card"><b>2. As long as the message</b><span>One key bit for every message bit.</span></div><div class="card"><b>3. Used only once</b><span>Thrown away after one message (hence "one-time").</span></div></div>
+<p>In 1949 Claude Shannon proved that this <b>one-time pad</b> has <b>perfect secrecy</b>: the ciphertext tells Eve nothing at all about the message.</p>
+<h4>Why: every message is equally possible</h4>
+<div class="ex"><b>Example.</b> Eve sees the ciphertext <b>1101</b>. Could the message be 1011? Yes, if the key was 0110. Could it be 0000? Yes, if the key was 1101. Could it be 1111? Yes, with key 0010. For <i>every</i> 4-bit message there is exactly one key that fits, and every key was equally likely. So all 16 messages are still equally likely: Eve has learned nothing.</div>
+
+<h3>Try the one-time pad</h3>
+<p>Tap the message bits to change them. Then play Eve: tap a guess, and see the key that would make your guess "correct".</p>
+<span class="lbl">Message (tap to change)</span><div class="bits" id="otM"></div>
+<span class="lbl">Key (random) <button class="mini-b" id="otK">New key</button></span><div class="bits" id="otKey"></div>
+<span class="lbl">Ciphertext = message ⊕ key (what Eve sees)</span><div class="bits" id="otC"></div>
+<span class="lbl">Eve's guess at the message (tap to change)</span><div class="bits" id="otG"></div>
+<p id="otO"></p>
+
+<h3>Reuse and key supply</h3>
+<p><b>Never reuse the key.</b> If two messages share a key, XOR-ing the two ciphertexts makes the key cancel out:</p>
+<div class="ex">m₁ = 1010, m₂ = 0110, same key k = 1100.<br>c₁ = 1010 ⊕ 1100 = 0110 and c₂ = 0110 ⊕ 1100 = 1010.<br>Eve computes c₁ ⊕ c₂ = 0110 ⊕ 1010 = <b>1100</b> = m₁ ⊕ m₂. The key has vanished, and patterns in the messages start to leak.</div>
+<p>So the one-time pad needs a <b>huge supply of fresh, shared, random key</b>. Physically carrying keys around is slow and risky. <b>Quantum key distribution</b> (6.1) is a way to grow such keys over a cable or through the air.</p>
+
+<h3>Measuring information in bits</h3>
+<p>Later sections need one more idea: how much Eve <i>knows</i>, counted in bits. Shannon's <b>entropy</b> measures how unpredictable something is:</p>
+<div class="grid"><div class="card"><b>Fair coin (50/50)</b><span>Completely unpredictable: <b>1 bit</b> of uncertainty.</span></div><div class="card"><b>Two-headed coin</b><span>Always heads: <b>0 bits</b>. Nothing to learn.</span></div><div class="card"><b>Biased coin (97/3)</b><span>Almost predictable: only about <b>0.19 bits</b>.</span></div></div>
+<p>For a yes/no event with chance p the formula is <span class="m" style="white-space:normal">h(p) = −p·log₂p − (1−p)·log₂(1−p)</span>. Drag the slider to see it:</p>
+<div class="lb"><label class="th">p = <b id="enV"></b><input id="enP" type="range" min="0" max="100" value="3" aria-label="Chance p"></label></div>
+<svg class="p8c" id="enC" viewBox="0 0 400 220" role="img" aria-label="Entropy curve: zero at the ends and one bit in the middle"></svg>
+<p id="enO"></p>
+<div class="note">Why this matters: if Bob's copy of the key differs from Alice's in a fraction Q of the bits, it takes about <b>h(Q) bits of extra talk per key bit</b> to fix the errors (6.5). And Eve's knowledge, measured in these bits, is what must be squeezed out (6.6).</div></section>
+
+<section data-split="h3" class="s"><h2>5.4 The no-cloning theorem: quantum states can't be copied</h2>
+<p class="lead">Copying is easy for ordinary data: you can photocopy a page or duplicate a file perfectly. In 1982 Wootters, Zurek and Dieks proved that <b>no machine can make a perfect copy of an unknown qubit</b>. This one fact is the foundation of quantum cryptography.</p>
+<h3>A copier that seems to work</h3>
+<p>Let's try to build a copier. It takes the qubit to copy and a blank qubit in |0⟩, and should output two copies. The CNOT gate (5.1) looks perfect:</p>
+<div class="two"><div class="card"><b>Copy |0⟩</b><span>CNOT |0⟩|0⟩ = |0⟩|0⟩ ✓ two copies of |0⟩</span></div><div class="card"><b>Copy |1⟩</b><span>CNOT |1⟩|0⟩ = |1⟩|1⟩ ✓ two copies of |1⟩</span></div></div>
+<p>It copies 0 and 1 perfectly. So far so good.</p>
+<h3>Where it fails: superpositions</h3>
+<p>Now feed it |+⟩ = 0.71|0⟩ + 0.71|1⟩. Gates act on each part of a superposition separately (they are <b>linear</b>, 5.1), so:</p>
+<div class="ex"><p><b>What the copier gives:</b> 0.71|0⟩|0⟩ + 0.71|1⟩|1⟩ = 0.71|00⟩ + 0.71|11⟩. That's the Bell state Φ⁺ (5.1), an entangled pair!</p>
+<p><b>What two copies would be:</b> |+⟩|+⟩ = (0.71|0⟩ + 0.71|1⟩)(0.71|0⟩ + 0.71|1⟩) = 0.5|00⟩ + 0.5|01⟩ + 0.5|10⟩ + 0.5|11⟩ (tensor product, 5.1).</p>
+<p>These are different: the copier has no |01⟩ or |10⟩ at all. <b>The copy failed.</b></p></div>
+<p>This isn't just a bad choice of copier. <b>Any</b> machine that copies |0⟩ and |1⟩ correctly must, by linearity, turn |+⟩ into 0.71|00⟩ + 0.71|11⟩, never into |+⟩|+⟩. And a machine tuned to copy |+⟩ and |−⟩ fails on |0⟩ and |1⟩. No machine copies them all.</p>
+
+<h3>Try the copier</h3>
+<p>Pick an input. The top chart is what the CNOT copier actually outputs; the bottom chart is what two perfect copies would look like.</p>
+<div class="lb"><span class="mu">Input:</span><button data-cl="0" class="go">|0⟩</button><button data-cl="1">|1⟩</button><button data-cl="p">|+⟩</button><button data-cl="m">|−⟩</button></div>
+<span class="lbl">Copier output</span><svg class="p8c" id="clA" viewBox="0 0 400 200" role="img" aria-label="Amounts of 00, 01, 10, 11 from the copier"></svg>
+<span class="lbl">Two perfect copies would be</span><svg class="p8c" id="clB" viewBox="0 0 400 200" role="img" aria-label="Amounts of 00, 01, 10, 11 for two perfect copies"></svg>
+<p id="clO"></p>
+
+<h3>What it means for security</h3>
+<div class="grid"><div class="card"><b>Eve can't copy and keep</b><span>She can't make a private copy of Alice's qubit to study while forwarding the original untouched.</span></div><div class="card"><b>Looking disturbs</b><span>Measuring the qubit instead (5.1) collapses it, which changes it whenever she guesses the wrong basis. Those changes show up as errors.</span></div><div class="card"><b>Imperfect clones</b><span>The best possible "approximate copier" makes copies that are only about 83% (5/6) faithful, so it also leaves traces.</span></div></div>
+<div class="note">No-cloning applies to <b>unknown</b> states. If you know a qubit is |0⟩ you can make as many |0⟩s as you like. Ordinary bits (which are always 0 or 1) can always be copied, which is why classical eavesdropping leaves no trace.</div></section>
+<div class="pn"><a href="part4.html">← Part 4</a><a href="part6.html">Part 6 →</a></div></main></div>
+
+<script src="js/part5.js"></script>
+<script src="js/site.js"></script>
+</body></html>

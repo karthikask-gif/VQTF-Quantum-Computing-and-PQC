@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Part 1 · Foundations | VQTF PQC and Quantum Cryptography</title>
+<link rel="stylesheet" href="css/style.css">
+</head><body>
+<nav class="top"><a href="index.html">Home</a><a href="part1.html">Part 1 · Foundations</a><a href="part2.html">Part 2 · Lattice Cryptography</a><a href="part3.html">Part 3 · Other Families</a><a href="part4.html">Part 4 · Deploying PQC</a><a href="part5.html">Part 5 · Quantum Crypto Basics</a><a href="part6.html">Part 6 · QKD</a></nav>
+
+<div class="pg" id="p-part1">
+<header class="hero">
+<svg class="anim" viewBox="0 0 300 200" role="img" aria-label="A grid of lattice points glowing around a padlock">
+<g fill="#7ff5ef"><circle class="lt" cx="40" cy="40" r="4"/><circle class="lt d2" cx="95" cy="55" r="4"/><circle class="lt d3" cx="150" cy="70" r="4"/><circle class="lt" cx="205" cy="85" r="4"/><circle class="lt d2" cx="260" cy="100" r="4"/>
+<circle class="lt d3" cx="25" cy="105" r="4"/><circle class="lt" cx="80" cy="120" r="4"/><circle class="lt d2" cx="245" cy="165" r="4"/><circle class="lt d3" cx="65" cy="185" r="4"/><circle class="lt" cx="120" cy="10" r="4"/><circle class="lt d2" cx="175" cy="25" r="4"/><circle class="lt d3" cx="230" cy="40" r="4"/><circle class="lt" cx="285" cy="55" r="4"/><circle class="lt d2" cx="10" cy="170" r="4"/><circle class="lt d3" cx="190" cy="150" r="4"/></g>
+<rect x="120" y="95" width="60" height="50" rx="8" fill="#ffd36b"/><path d="M132 95 v-14 a18 18 0 0 1 36 0 v14" fill="none" stroke="#ffd36b" stroke-width="7"/><circle cx="150" cy="117" r="6" fill="#2a1f8f"/><rect x="147" y="117" width="6" height="14" fill="#2a1f8f"/></svg>
+<h1>Part 1 · Foundations</h1><p>Why quantum computers threaten today's encryption, and what PQC is.</p></header>
+<main>
+<section data-split="h3" class="s"><h2>1.1 Background: what you need first</h2>
+<p class="lead">This course is about protecting data from quantum computers. Before we start, here are the few ideas it builds on, each in plain words with a small example.</p>
+<h3>Locks and keys</h3>
+<p><b>Cryptography</b> is the science of keeping messages secret and genuine. It comes in two kinds.</p>
+<svg class="pic" style="max-width:360px" viewBox="0 0 340 150" role="img" aria-label="Symmetric: both people hold the same key. Public-key: anyone can lock with the open padlock, only the owner has the key" font-family="system-ui" font-size="12">
+<rect x="4" y="6" width="160" height="138" rx="12" fill="var(--sf)" stroke="var(--bd)"/><rect x="176" y="6" width="160" height="138" rx="12" fill="var(--sf)" stroke="var(--bd)"/>
+<text x="84" y="28" text-anchor="middle" font-weight="700" fill="var(--tx)">Symmetric</text><text x="256" y="28" text-anchor="middle" font-weight="700" fill="var(--tx)">Public-key</text>
+<g fill="var(--ac)"><circle cx="36" cy="75" r="12"/><rect x="44" y="71" width="26" height="8" rx="2"/><circle cx="132" cy="75" r="12"/><rect x="98" y="71" width="26" height="8" rx="2"/></g>
+<text x="84" y="115" text-anchor="middle" fill="var(--mu)">same secret key</text><text x="84" y="132" text-anchor="middle" fill="var(--mu)">on both sides</text>
+<rect x="196" y="68" width="38" height="30" rx="5" fill="var(--a2)"/><path d="M203 68 v-10 a12 12 0 0 1 24 0" fill="none" stroke="var(--a2)" stroke-width="5"/>
+<g fill="var(--ac)"><circle cx="276" cy="83" r="12"/><rect x="284" y="79" width="26" height="8" rx="2"/></g>
+<text x="215" y="122" text-anchor="middle" fill="var(--mu)">public</text><text x="215" y="137" text-anchor="middle" fill="var(--mu)">padlock</text><text x="292" y="122" text-anchor="middle" fill="var(--mu)">private</text><text x="292" y="137" text-anchor="middle" fill="var(--mu)">key</text></svg>
+<div class="two"><div class="card"><b>Symmetric</b><span>One shared secret key both locks and unlocks. Fast, used for the bulk of the data. Example: <strong>AES</strong>.</span></div><div class="card"><b>Public-key</b><span>Each person has a <strong>public key</strong> (an open padlock anyone may use) and a <strong>private key</strong> (the only key that opens it). It lets strangers set up a shared key and sign messages. Examples: <strong>RSA</strong>, <strong>Diffie–Hellman</strong>.</span></div></div>
+<div class="ex"><b>RSA in one line.</b> Multiplying is easy: 3 × 11 = <b>33</b>. Going backward, "which two primes make 33?", is <b>factoring</b>. For 33 it is instant, but for a number with 600 digits no ordinary computer can do it. RSA publishes the big product and keeps the two primes secret.</div>
+<h4>Hash functions: fingerprints of data</h4>
+<p>A <b>hash function</b> turns any input into a short fixed-size "fingerprint". It is easy to compute and practically impossible to reverse, and a tiny change in the input changes the whole output.</p>
+<div class="ex"><p>SHA-256("hello") = <b>2cf24dba</b>5fb0a30e…</p><p>SHA-256("hellp") = <b>fdd7585e</b>08c4e2af…</p><p>One letter changed, a completely different fingerprint.</p></div>
+
+<h3>Clock arithmetic and XOR</h3>
+<p><b>mod</b> means "the remainder after dividing", like a clock that wraps around. On a 12-hour clock, 14 o'clock is 2 o'clock: 14 mod 12 = 2.</p>
+<svg class="pic" style="max-width:190px" viewBox="0 0 200 170" role="img" aria-label="A five-hour clock; walking 17 steps lands on 2" font-family="system-ui" font-size="15">
+<circle cx="100" cy="85" r="62" fill="none" stroke="var(--bd)" stroke-width="3"/>
+<g fill="var(--tx)" text-anchor="middle" font-weight="700"><text x="100" y="15">0</text><text x="172" y="68">1</text><text x="146" y="157">2</text><text x="54" y="157">3</text><text x="28" y="68">4</text></g>
+<g class="ck"><line x1="100" y1="85" x2="100" y2="35" stroke="var(--ac)" stroke-width="5" stroke-linecap="round"/></g><circle cx="100" cy="85" r="6" fill="var(--ac)"/></svg>
+<div class="ex"><b>Example.</b> 17 mod 5: walk 17 steps around a 5-hour clock. Three full turns use 15 steps, 2 are left, so 17 mod 5 = <b>2</b>.</div>
+<p><b>XOR</b> (written ⊕) compares two bits: the answer is 1 when they differ and 0 when they match. It is how bits are "added on a 2-hour clock".</p>
+<div class="tw"><table><tr><th>a</th><th>b</th><th>a ⊕ b</th></tr><tr><td>0</td><td>0</td><td>0</td></tr><tr><td>0</td><td>1</td><td>1</td></tr><tr><td>1</td><td>0</td><td>1</td></tr><tr><td>1</td><td>1</td><td>0</td></tr></table></div>
+
+<h3>Quantum computers in brief</h3>
+<svg class="pic" viewBox="0 0 260 110" role="img" aria-label="A bit is a coin lying heads or tails; a qubit is a spinning coin" font-family="system-ui" font-size="13">
+<circle cx="60" cy="50" r="30" fill="#ffd36b"/><text x="60" y="56" text-anchor="middle" font-weight="700" fill="#2a1f8f">0</text>
+<ellipse class="cf" cx="190" cy="50" rx="30" ry="30" fill="var(--a2)"/><text x="190" y="56" text-anchor="middle" font-weight="700" fill="#fff">0 / 1</text>
+<text x="60" y="102" text-anchor="middle" fill="var(--mu)">bit</text><text x="190" y="102" text-anchor="middle" fill="var(--mu)">qubit</text></svg>
+<p>An ordinary computer stores <b>bits</b>, each 0 or 1, like a coin lying heads or tails. A quantum computer stores <b>qubits</b>, which can be in a blend of 0 and 1 at once (a <b>superposition</b>), like a spinning coin.</p>
+<p>This does not make it faster at everything. It is faster only for problems where a clever <b>quantum algorithm</b> can make the wrong answers cancel out. Two such algorithms matter for security: Shor's and Grover's.</p>
+
+<h3>Shor's algorithm</h3>
+<p>Shor's algorithm finds the <b>period</b> of powers on a clock: how often the pattern repeats. Knowing the period cracks factoring, and also the discrete logarithm problem behind Diffie–Hellman (explained in 1.2). Here is the classical half of the idea with N = 15.</p>
+<div class="ft"><span class="kA">2⁰→1</span><span class="kB">2¹→2</span><span class="kC">2²→4</span><span class="kD">2³→8</span><span class="kA">2⁴→1</span><span class="kB">2⁵→2</span><span class="kC">2⁶→4</span><span class="kD">2⁷→8</span></div>
+<div class="ex"><p>Powers of 2 mod 15 repeat every <b>4</b> steps (same colours), so the period is r = 4.</p><p>Take 2^(r/2) = 2² = 4. Then 4 − 1 = <b>3</b> and 4 + 1 = <b>5</b>, and indeed 15 = 3 × 5.</p></div>
+<p>For a 600-digit number the pattern is far too long to list, but a large quantum computer finds the period quickly. That breaks RSA, Diffie–Hellman and elliptic-curve cryptography.</p>
+
+<h3>Grover's algorithm</h3>
+<p>Grover's algorithm searches a list of N possibilities in about <b>√N</b> steps instead of N. Against a secret key this halves the key's strength in bits.</p>
+<div class="tw"><table><tr><th>Key</th><th>Ordinary guessing</th><th>With Grover</th></tr><tr><td>AES-128</td><td>2¹²⁸ tries</td><td>√2¹²⁸ = 2⁶⁴ steps (too weak)</td></tr><tr><td>AES-256</td><td>2²⁵⁶ tries</td><td>2¹²⁸ steps (still safe)</td></tr></table></div>
+<div class="note">The fix for Grover is easy: double the key length. The fix for Shor is not: public-key cryptography needs entirely new maths. That is what this course is about.</div>
+
+<h3>Harvest now, decrypt later</h3>
+<p>An attacker can record encrypted traffic <b>today</b>, store it, and decrypt it years from now once a big quantum computer exists. So data that must stay secret for a long time is already at risk, even though no such computer exists yet.</p>
+<svg class="pic" style="max-width:420px" viewBox="0 0 360 130" role="img" aria-label="Eve records a locked message in 2026, stores it, and opens it in 2035 with a quantum computer" font-family="system-ui" font-size="13">
+<line x1="30" y1="70" x2="340" y2="70" stroke="var(--bd)" stroke-width="3"/>
+<g fill="var(--tx)" text-anchor="middle" font-weight="700"><text x="40" y="112">2026</text><text x="180" y="112">stored</text><text x="320" y="112">2035</text></g>
+<g fill="var(--mu)" text-anchor="middle"><text x="45" y="24">Eve records</text><text x="180" y="24">waits</text><text x="310" y="24">quantum PC</text></g>
+<g class="hvm"><rect x="18" y="53" width="44" height="34" rx="5" fill="var(--ac)"/><path d="M18 53 l22 18 l22 -18" fill="none" stroke="#fff" stroke-width="2"/></g>
+<g class="hvk"><circle cx="320" cy="70" r="28" fill="none" stroke="#e0576b" stroke-width="3"/><text x="320" y="44" text-anchor="middle" fill="#e0576b" font-weight="700">read!</text></g></svg>
+<div class="ex"><b>Numerical example.</b> A medical record encrypted in 2026 must stay private for 15 years, until 2041. If a large quantum computer appears in 2035, the stored copy is readable for the last <b>2041 − 2035 = 6 years</b> of its secret life. Mosca's rule (1.2) turns this into a simple test.</div></section>
+
+<section data-split="h3" class="s"><h2>1.2 The quantum threat: what breaks and when</h2>
+<p class="lead">Almost every secure website, bank app and messaging service relies on two kinds of public-key maths. Shor's algorithm (1.1) breaks both.</p>
+<h3>Factoring (RSA)</h3>
+<p>RSA's security rests on factoring being hard (1.1). Shor's algorithm finds the factors quickly, so a large enough quantum computer breaks RSA outright.</p>
+<h4>RSA, step by step (tiny numbers)</h4>
+<div class="ex"><p><b>Key generation.</b> Pick two secret primes p = 3 and q = 11. Public n = p × q = <b>33</b>. Compute φ = (p − 1)(q − 1) = 2 × 10 = <b>20</b>.</p>
+<p>Choose the public exponent e = <b>3</b>. The private exponent d undoes it: e × d leaves remainder 1 when divided by 20. d = <b>7</b>, because 3 × 7 = 21 = 20 + 1.</p>
+<p><b>Public key:</b> (n = 33, e = 3). <b>Private key:</b> d = 7.</p>
+<p><b>Encrypt</b> the message m = 4: c = 4³ mod 33 = 64 mod 33 = <b>31</b>.</p>
+<p><b>Decrypt:</b> 31⁷ mod 33 = <b>4</b>. The message is back.</p></div>
+<svg class="pic" style="max-width:420px" viewBox="0 0 360 100" role="img" aria-label="Message 4 is locked into 31 with the public key and unlocked back to 4 with the private key" font-family="system-ui" font-size="13">
+<rect x="95" y="28" width="80" height="40" rx="8" fill="var(--sf)" stroke="var(--a2)" stroke-width="2"/><rect x="215" y="28" width="80" height="40" rx="8" fill="var(--sf)" stroke="var(--ac)" stroke-width="2"/>
+<g text-anchor="middle"><text x="135" y="53" fill="var(--tx)">^3 mod 33</text><text x="255" y="53" fill="var(--tx)">^7 mod 33</text><text x="135" y="90" fill="var(--mu)">public key</text><text x="255" y="90" fill="var(--mu)">private key</text></g>
+<g class="rs1"><circle cx="25" cy="48" r="17" fill="#ffd36b"/><text x="25" y="54" text-anchor="middle" font-weight="700" fill="#2a1f8f">4</text></g>
+<g class="rs2"><circle cx="145" cy="48" r="17" fill="var(--a2)"/><text x="145" y="54" text-anchor="middle" font-weight="700" fill="#fff">31</text></g>
+<g class="rs3"><circle cx="335" cy="48" r="17" fill="#ffd36b"/><text x="335" y="54" text-anchor="middle" font-weight="700" fill="#2a1f8f">4</text></g></svg>
+<div class="note"><b>How Shor breaks it.</b> Eve sees n = 33 and e = 3. If she can factor 33 = 3 × 11, she computes φ = 20 and then d = 7 exactly as Alice did. Factoring is the only hard step, and Shor's algorithm (1.1) makes it easy.</div>
+<h3>Discrete logarithms (Diffie–Hellman, ECC)</h3>
+<p>The other big family uses <b>powers on a clock</b> (mod, 1.1). Going forward is easy: 3⁴ mod 17 = 81 mod 17 = <b>13</b>. Going backward ("which power of 3 gives 13?") is the <b>discrete logarithm</b> problem, and it is very hard for big numbers.</p>
+<h4>Diffie–Hellman key exchange, step by step</h4>
+<p>This is how two strangers agree on a secret key in public. Public numbers: clock size p = 23 and base g = 5.</p>
+<div class="ex"><p><b>Alice</b> secretly picks a = 6 and sends A = 5⁶ mod 23 = <b>8</b>.</p>
+<p><b>Bob</b> secretly picks b = 15 and sends B = 5¹⁵ mod 23 = <b>19</b>.</p>
+<p>Alice computes B⁶ = 19⁶ mod 23 = <b>2</b>. Bob computes A¹⁵ = 8¹⁵ mod 23 = <b>2</b>. Both have the shared secret 2.</p>
+<p>Eve sees 23, 5, 8 and 19. To get the secret she must find a = 6 from 5ᵃ mod 23 = 8: a discrete logarithm.</p></div>
+<svg class="pic wide" viewBox="0 0 560 120" role="img" aria-label="Alice and Bob exchange public numbers 8 and 19 and both arrive at secret 2" font-family="system-ui" font-size="13">
+<circle cx="50" cy="60" r="28" fill="#ffd36b"/><text x="50" y="66" text-anchor="middle" font-weight="700" fill="#2a1f8f">A</text><circle cx="510" cy="60" r="28" fill="#7ff5ef"/><text x="510" y="66" text-anchor="middle" font-weight="700" fill="#2a1f8f">B</text>
+<line x1="80" y1="45" x2="480" y2="45" stroke="var(--bd)" stroke-width="2"/><line x1="80" y1="78" x2="480" y2="78" stroke="var(--bd)" stroke-width="2"/>
+<g class="mail9"><rect x="84" y="33" width="36" height="24" rx="5" fill="var(--ac)"/><text x="102" y="50" text-anchor="middle" fill="#fff" font-weight="700">8</text></g>
+<g class="mail9b"><rect x="440" y="66" width="36" height="24" rx="5" fill="var(--a2)"/><text x="458" y="83" text-anchor="middle" fill="#fff" font-weight="700">19</text></g>
+<text x="280" y="112" text-anchor="middle" fill="var(--mu)">both end with the secret 2; Eve sees only 8 and 19</text></svg>
+<p><b>Elliptic-curve cryptography (ECC)</b> plays the same game, but the "clock" is replaced by points on a curve (shapes like y² = x³ + ax + b), which gives the same security with much smaller keys. Shor's algorithm solves discrete logarithms too, so <b>Diffie–Hellman and ECC fall as well</b>.</p>
+
+<h3>Elliptic curves, step by step</h3>
+<p>Take the curve y² = x³ + 2x + 2 on a clock of size 17 (every number is taken mod 17). It has just 18 points, the dots below. Points can be "added" with a fixed rule, so starting from a base point G = (5, 1) we can hop to 2G, 3G and so on.</p>
+<svg class="p9c" id="ecC" viewBox="0 0 380 390" role="img" aria-label="Points of the curve y squared equals x cubed plus 2x plus 2 mod 17, with the multiples of G highlighted one by one"></svg>
+<div class="lb"><button id="ecB">← Back</button><button id="ecN">Next →</button><button id="ecA" class="go">Pause</button></div>
+<p id="ecO" class="mu"></p>
+<h4>Doubling G, worked out</h4>
+<div class="ex"><p>To double G = (5, 1), find the slope (steepness) of the curve at G: λ = (3x² + 2) ÷ (2y) = (3·25 + 2) ÷ 2 = 77 ÷ 2. Mod 17: 77 mod 17 = 9, and "÷ 2" means "× 9" (because 2 × 9 = 18 = 1 mod 17). So λ = 9 × 9 = 81 mod 17 = <b>13</b>.</p>
+<p>x = λ² − 2·5 = 169 − 10 = 159 mod 17 = <b>6</b>. y = λ(5 − 6) − 1 = −14 mod 17 = <b>3</b>. So 2G = <b>(6, 3)</b>.</p></div>
+<h4>ECC key exchange</h4>
+<div class="ex"><p><b>Alice</b> picks secret a = 3 and sends A = 3G = <b>(10, 6)</b>. <b>Bob</b> picks secret b = 5 and sends B = 5G = <b>(9, 16)</b>.</p>
+<p>Alice computes 3·B = 15G, Bob computes 5·A = 15G. Both get <b>(3, 16)</b>.</p>
+<p>Eve sees G, (10, 6) and (9, 16). To find a she must solve "how many hops from G reach (10, 6)?", the <b>elliptic-curve discrete logarithm</b>. With 19 hops she can just count; real curves have about 2²⁵⁶ points.</p></div>
+<h4>Why Shor still wins</h4>
+<p>After 19 hops the pattern comes back to the start (19G is the curve's "zero point"). Powers on a clock repeat in the same way, for example 3ˣ mod 7:</p>
+<div class="ft"><span class="kA">3¹→3</span><span class="kB">3²→2</span><span class="kC">3³→6</span><span class="kD">3⁴→4</span><span class="kA">3⁵→5</span><span class="kB">3⁶→1</span><span class="kC">3⁷→3</span></div>
+<p>Any repeating pattern has a hidden <b>period</b>, and finding periods is exactly what Shor's algorithm does fast. That is why both Diffie–Hellman and ECC fall.</p>
+
+<h3>What survives</h3>
+<div class="tw"><table><tr><th>Tool</th><th>Used for</th><th>Against a quantum computer</th></tr>
+<tr><td>RSA</td><td>Key exchange, signatures</td><td><b>Broken</b> (Shor)</td></tr>
+<tr><td>Diffie–Hellman, ECC (ECDH, ECDSA)</td><td>Key exchange, signatures</td><td><b>Broken</b> (Shor)</td></tr>
+<tr><td>AES (symmetric)</td><td>Encrypting data</td><td>Weakened by Grover (1.1): use 256-bit keys</td></tr>
+<tr><td>SHA-2, SHA-3 (hash functions)</td><td>Fingerprints of data</td><td>Weakened slightly: use longer outputs</td></tr></table></div>
+<p>So the urgent job is to replace <b>public-key</b> cryptography: key exchange and digital signatures.</p>
+
+<h3>Mosca's rule: why act now</h3>
+<p>Michele Mosca gave a simple test. Let</p>
+<div class="grid"><div class="card"><b>x</b><span>How many years your data must stay secret.</span></div><div class="card"><b>y</b><span>How many years it takes to switch to new cryptography.</span></div><div class="card"><b>z</b><span>How many years until a quantum computer can break today's locks.</span></div></div>
+<p>If <b>x + y &gt; z</b>, you are already too late: secrets recorded today ("harvest now, decrypt later", 1.1) will be readable while they still matter.</p>
+<div class="ex"><b>Example.</b> Medical records must stay private for x = 25 years, and switching takes y = 5 years. If a quantum computer arrives in z = 15 years, then 25 + 5 = 30 &gt; 15: the switch should have started long ago.</div>
+<div class="lb"><label class="th">x (keep secret) <b id="moX"></b><input id="moXi" type="range" min="1" max="30" value="10" aria-label="Years data must stay secret"></label></div>
+<div class="lb"><label class="th">y (switch time) <b id="moY"></b><input id="moYi" type="range" min="1" max="15" value="5" aria-label="Years to migrate"></label></div>
+<div class="lb"><label class="th">z (quantum arrives) <b id="moZ"></b><input id="moZi" type="range" min="1" max="30" value="12" aria-label="Years until a quantum computer"></label></div>
+<svg class="p9c" id="moC" viewBox="0 0 400 130" role="img" aria-label="Timeline comparing x plus y with z"></svg>
+<p id="moO"></p></section>
+
+<section data-split="h3" class="s"><h2>1.3 PQC basics: new hard problems</h2>
+<p class="lead"><b>Post-quantum cryptography (PQC)</b> means public-key methods that run on ordinary computers but rest on maths problems that are believed to be hard <b>even for quantum computers</b>. No special hardware is needed: it is just new software.</p>
+<h3>Two jobs to replace</h3>
+<div class="two"><div class="card"><b>Key exchange: a KEM</b><span>A <b>key encapsulation mechanism</b> lets two parties agree on a shared secret key (then used with AES). It replaces Diffie–Hellman and RSA key exchange.</span></div><div class="card"><b>Digital signatures</b><span>A signature proves who wrote a message and that it wasn't changed, like a tamper-proof wax seal. It replaces RSA and ECDSA signatures.</span></div></div>
+<h4>How a KEM works</h4>
+<svg class="pic wide" viewBox="0 0 560 170" role="img" aria-label="Bob publishes a public key; Alice uses it to lock a random secret into a capsule; Bob opens the capsule with his private key; both now share the secret" font-family="system-ui" font-size="13">
+<circle cx="50" cy="80" r="28" fill="#ffd36b"/><text x="50" y="86" text-anchor="middle" font-weight="700" fill="#2a1f8f">A</text><circle cx="510" cy="80" r="28" fill="#7ff5ef"/><text x="510" y="86" text-anchor="middle" font-weight="700" fill="#2a1f8f">B</text>
+<line x1="80" y1="50" x2="480" y2="50" stroke="var(--bd)" stroke-width="2"/><line x1="80" y1="110" x2="480" y2="110" stroke="var(--bd)" stroke-width="2"/>
+<g class="kem1"><rect x="440" y="38" width="44" height="24" rx="5" fill="var(--a2)"/><text x="462" y="55" text-anchor="middle" fill="#fff" font-size="12">pk</text></g>
+<g class="kem2"><rect x="80" y="98" width="44" height="24" rx="12" fill="var(--ac)"/><text x="102" y="115" text-anchor="middle" fill="#fff" font-size="12">ct</text></g>
+<g fill="var(--tx)" text-anchor="middle"><text x="280" y="38">1. Bob sends his public key</text><text x="280" y="140">2. Alice locks a random secret K into a capsule</text><text x="280" y="160" fill="var(--mu)">3. Bob opens it with his private key: both now hold K</text></g></svg>
+<p>The three steps are called <b>KeyGen</b> (Bob makes a key pair), <b>Encaps</b> (Alice makes a secret and its capsule, the <b>ciphertext</b>) and <b>Decaps</b> (Bob opens it).</p>
+
+<h3>Five families of hard problems</h3>
+<div class="grid"><div class="card"><b>Lattices</b><span>Finding the nearest point in a huge multi-dimensional grid (2.1 to 2.4). The main family.</span></div><div class="card"><b>Hash functions</b><span>Reversing a fingerprint (3.1). The most conservative choice.</span></div><div class="card"><b>Error-correcting codes</b><span>Fixing errors in a scrambled code (3.2). Studied since 1978.</span></div><div class="card"><b>Multivariate equations</b><span>Solving many quadratic equations at once (3.3).</span></div><div class="card"><b>Isogenies</b><span>Finding paths between elliptic curves (3.3). One scheme was broken in 2022.</span></div></div>
+<div class="note">None of these problems has a known fast quantum algorithm. Shor's trick needs a hidden <b>period</b> (1.1), and these problems don't have one.</div>
+
+<h3>Hard problems at a glance</h3>
+<p>Every public-key scheme is a <b>one-way street</b>: easy to go forward, hard to go back unless you hold a secret shortcut (the private key).</p>
+<div class="tw"><table><tr><th>Family</th><th>Hard problem</th><th>Easy direction</th><th>Hard direction</th></tr>
+<tr><td>Lattices</td><td>SVP, CVP, LWE</td><td>Add up basis vectors, add small noise</td><td>Find the shortest or closest point; strip the noise</td></tr>
+<tr><td>Codes</td><td>Syndrome decoding</td><td>Add a few errors to a codeword</td><td>Find the errors in a random-looking code</td></tr>
+<tr><td>Hashes</td><td>Preimage and collision</td><td>Compute a fingerprint</td><td>Find an input with a given fingerprint</td></tr>
+<tr><td>Multivariate</td><td>MQ (multivariate quadratic)</td><td>Plug numbers into equations</td><td>Solve many quadratic equations together</td></tr>
+<tr><td>Isogenies</td><td>Path finding</td><td>Walk a path between curves</td><td>Find a path between two given curves</td></tr></table></div>
+<div class="ex"><b>Compare with RSA:</b> forward 3 × 11 = 33 is easy, backward 33 → 3 × 11 is hard for normal computers but easy for Shor. The rows above have no known shortcut, quantum or classical.</div>
+
+<h3>The new standards</h3>
+<p>In 2016 the US standards agency <b>NIST</b> invited the world to submit and attack candidates. After 82 submissions and years of public analysis:</p>
+<div class="tw"><table><tr><th>Standard</th><th>Based on</th><th>Job</th><th>Family</th></tr>
+<tr><td><b>ML-KEM</b> (FIPS 203, 2024)</td><td>CRYSTALS-Kyber</td><td>Key exchange</td><td>Lattice</td></tr>
+<tr><td><b>ML-DSA</b> (FIPS 204, 2024)</td><td>CRYSTALS-Dilithium</td><td>Signatures (main choice)</td><td>Lattice</td></tr>
+<tr><td><b>SLH-DSA</b> (FIPS 205, 2024)</td><td>SPHINCS+</td><td>Signatures (backup)</td><td>Hash</td></tr>
+<tr><td><b>FN-DSA</b> (FIPS 206, in progress)</td><td>Falcon</td><td>Signatures (compact)</td><td>Lattice</td></tr>
+<tr><td><b>HQC</b> (selected 2025)</td><td>HQC</td><td>Key exchange (backup)</td><td>Code</td></tr></table></div>
+<p>"ML" stands for <b>module lattice</b>, "SLH" for <b>stateless hash</b> and "FN" for <b>fast-Fourier NTRU</b>; all three are explained below.</p>
+<h4>Security levels</h4>
+<p>Each scheme comes in sizes matched to how hard AES is to break: <b>Level 1</b> ≈ AES-128, <b>Level 3</b> ≈ AES-192, <b>Level 5</b> ≈ AES-256. Bigger level, bigger keys, more safety margin.</p></section>
+<div class="pn"><a href="part2.html">Part 2 →</a></div></main></div>
+
+<script src="js/part1.js"></script>
+<script src="js/site.js"></script>
+</body></html>

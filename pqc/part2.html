@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Part 2 · Lattice Cryptography | VQTF PQC and Quantum Cryptography</title>
+<link rel="stylesheet" href="css/style.css">
+</head><body>
+<nav class="top"><a href="index.html">Home</a><a href="part1.html">Part 1 · Foundations</a><a href="part2.html">Part 2 · Lattice Cryptography</a><a href="part3.html">Part 3 · Other Families</a><a href="part4.html">Part 4 · Deploying PQC</a><a href="part5.html">Part 5 · Quantum Crypto Basics</a><a href="part6.html">Part 6 · QKD</a></nav>
+
+<div class="pg" id="p-part2">
+<header class="hero">
+<svg class="anim" viewBox="0 0 300 200" role="img" aria-label="A grid of lattice points glowing around a padlock">
+<g fill="#7ff5ef"><circle class="lt" cx="40" cy="40" r="4"/><circle class="lt d2" cx="95" cy="55" r="4"/><circle class="lt d3" cx="150" cy="70" r="4"/><circle class="lt" cx="205" cy="85" r="4"/><circle class="lt d2" cx="260" cy="100" r="4"/>
+<circle class="lt d3" cx="25" cy="105" r="4"/><circle class="lt" cx="80" cy="120" r="4"/><circle class="lt d2" cx="245" cy="165" r="4"/><circle class="lt d3" cx="65" cy="185" r="4"/><circle class="lt" cx="120" cy="10" r="4"/><circle class="lt d2" cx="175" cy="25" r="4"/><circle class="lt d3" cx="230" cy="40" r="4"/><circle class="lt" cx="285" cy="55" r="4"/><circle class="lt d2" cx="10" cy="170" r="4"/><circle class="lt d3" cx="190" cy="150" r="4"/></g>
+<rect x="120" y="95" width="60" height="50" rx="8" fill="#ffd36b"/><path d="M132 95 v-14 a18 18 0 0 1 36 0 v14" fill="none" stroke="#ffd36b" stroke-width="7"/><circle cx="150" cy="117" r="6" fill="#2a1f8f"/><rect x="147" y="117" width="6" height="14" fill="#2a1f8f"/></svg>
+<h1>Part 2 · Lattice Cryptography</h1><p>Hiding secrets in giant grids: the maths behind the main new standards.</p></header>
+<main>
+<section data-split="h3" class="s"><h2>2.1 Lattices: the grid that hides secrets</h2>
+<p class="lead">A <b>lattice</b> is a regular grid of points, like the holes in a pegboard or the atoms in a crystal. It is the foundation of ML-KEM, ML-DSA and FN-DSA.</p>
+<h3>Building a lattice from a basis</h3>
+<p>Pick two arrows, the <b>basis vectors</b>. Every lattice point is a <b>whole-number</b> combination of them: walk some whole number of steps along the first arrow and some along the second.</p>
+<div class="ex"><b>Example.</b> Basis g₁ = (2, 0) and g₂ = (1, 2).<br>1·g₁ + 1·g₂ = (3, 2) is a lattice point. 2·g₁ − 1·g₂ = (3, −2) is too. But (2.5, 1) is not: it would need half-steps.</div>
+<h4>Same grid, different bases</h4>
+<p>The same lattice can be built from very different bases. b₁ = (7, 2) and b₂ = (5, 2) produce exactly the same points as g₁ and g₂: for example (7, 2) = 3g₁ + g₂, and (2, 0) = b₁ − b₂.</p>
+<div class="two"><div class="card"><b>A good basis</b><span>Short arrows, nearly at right angles. Easy to work with.</span></div><div class="card"><b>A bad basis</b><span>Long arrows, nearly pointing the same way. Hides the grid's structure.</span></div></div>
+<p>This is the trick of lattice cryptography: <b>the private key is a good basis, and the public key is a bad basis</b> of the same lattice.</p>
+
+<h3>The hard problems</h3>
+<div class="two"><div class="card"><b>Shortest Vector Problem (SVP)</b><span>Find the lattice point closest to the origin (other than the origin itself).</span></div><div class="card"><b>Closest Vector Problem (CVP)</b><span>Given any point in space, find the lattice point nearest to it.</span></div></div>
+<p>In 2 dimensions you can solve these by eye. Cryptography uses lattices with <b>hundreds of dimensions</b>, where the number of nearby points to check grows exponentially. The best known algorithms, quantum included, would take longer than the age of the universe.</p>
+<div class="ex"><b>Worked example: SVP.</b> With the good basis g₁ = (2, 0), g₂ = (1, 2), the short vectors are easy to see: g₁ has length <b>2</b>, g₂ has length √5 ≈ 2.24. The shortest non-zero lattice vector is ±(2, 0).<br>
+The bad basis b₁ = (7, 2), b₂ = (5, 2) makes the <b>same</b> lattice, but its arrows have lengths 7.28 and 5.39. The short vector is hidden: you only find it by spotting the combination b₁ − b₂ = (7 − 5, 2 − 2) = <b>(2, 0)</b>. In 500 dimensions, finding such a combination is hopeless.</div>
+<div class="ex"><b>Worked example: CVP with each basis.</b> Target t = (4.4, 1.3). The simple method: write t in terms of the basis, then round to whole numbers.<br>
+<b>Good basis:</b> t = 1.875·g₁ + 0.65·g₂ → round to 2·g₁ + 1·g₂ = <b>(5, 2)</b>, distance 0.92. This is the true closest point. ✓<br>
+<b>Bad basis:</b> t = 0.575·b₁ + 0.075·b₂ → round to 1·b₁ + 0·b₂ = <b>(7, 2)</b>, distance 2.69. Wrong! ✗</div>
+<p>With the good basis, rounding works. With the bad basis it fails, and in hundreds of dimensions nobody knows how to fix it.</p>
+
+<h3>Good basis vs bad basis</h3>
+<p>Tap anywhere on the grid to place a target (×). The two coloured arrows are the basis. The ring shows where rounding with that basis lands: teal if it is right, red if it is wrong. The orange dot is the true closest lattice point.</p>
+<div class="lb"><span class="mu">Basis:</span><button data-lb="g" class="go">Good (2,0), (1,2)</button><button data-lb="b">Bad (7,2), (5,2)</button></div>
+<svg class="p9c lat" id="laC" viewBox="0 0 400 300" role="img" aria-label="Lattice grid; tap to place a target point"></svg>
+<p id="laO"></p></section>
+
+<section data-split="h3" class="s"><h2>2.2 Learning with errors (LWE): equations with a little noise</h2>
+<p class="lead">ML-KEM and ML-DSA are built on a puzzle called <b>Learning With Errors</b> (Oded Regev, 2005). It turns the lattice problem into simple sums with a small amount of deliberate noise.</p>
+<h3>Easy without noise</h3>
+<p>Suppose there is a secret pair s = (s₁, s₂), and you are given sums on a 17-clock (mod 17):</p>
+<div class="ex">4·s₁ + 1·s₂ = 0 (mod 17)<br>7·s₁ + 3·s₂ = 2 (mod 17)</div>
+<p>Two equations, two unknowns: school algebra (Gaussian elimination) solves them at once. The answer is s = (3, 5). Check: 4·3 + 5 = 17 → 0 ✓, and 7·3 + 3·5 = 36 → 2 ✓.</p>
+<h3>Hard with a little noise</h3>
+<p>Now add a tiny random <b>error</b> e (−1, 0 or +1) to each answer before publishing it:</p>
+<div class="tw"><table class="tg"><tr><th>Row</th><th>a</th><th>a·s mod 17</th><th>error e</th><th>Published b</th></tr>
+<tr><td>1</td><td>(4, 1)</td><td>0</td><td>+1</td><td><b>1</b></td></tr>
+<tr><td>2</td><td>(7, 3)</td><td>2</td><td>−1</td><td><b>1</b></td></tr>
+<tr><td>3</td><td>(2, 8)</td><td>12</td><td>0</td><td><b>12</b></td></tr>
+<tr><td>4</td><td>(5, 6)</td><td>11</td><td>+1</td><td><b>12</b></td></tr></table></div>
+<p>The public sees only the a's and b's. Now elimination breaks down: every step mixes and grows the hidden errors until the answer is garbage. With hundreds of unknowns and well-chosen noise, finding s is as hard as solving a lattice problem. That is the <b>LWE problem</b>.</p>
+<div class="note">Why lattices? The rows a, together with the clock, define a lattice; the true values a·s are a lattice point, and the noisy b's are a point <i>near</i> it. Removing the noise means solving CVP (2.1).</div>
+
+<h3>Encrypting one bit with LWE</h3>
+<p>Here is a complete toy version of Regev's encryption, using the table above. <b>Private key:</b> s = (3, 5). <b>Public key:</b> the four rows (a, b).</p>
+<div class="ex"><p><b>Encrypt.</b> Alice secretly picks some rows, say rows 1, 3 and 4, and adds them up:</p>
+<p>u = (4+2+5, 1+8+6) = <b>(11, 15)</b> (mod 17), and v = 1 + 12 + 12 = 25 → <b>8</b> (mod 17).</p>
+<p>To send bit 0 she sends (u, v = 8). To send bit 1 she adds "half the clock" (8) to v: (u, v = 16).</p>
+<p><b>Decrypt.</b> Bob computes u·s = 11·3 + 15·5 = 108 → <b>6</b> (mod 17), then v − 6:</p>
+<p>Bit 0: 8 − 6 = <b>2</b>, close to 0, so the bit is <b>0</b>. ✓<br>Bit 1: 16 − 6 = <b>10</b>, close to 8 (half the clock), so the bit is <b>1</b>. ✓</p>
+<p>The leftover 2 is exactly the sum of the chosen errors: +1 + 0 + 1. It is small, so it doesn't spoil the answer.</p></div>
+<svg class="pic" viewBox="-130 -130 260 260" role="img" aria-label="A 17-hour clock: results near 0 mean bit 0, results near 8 or 9 mean bit 1" font-family="system-ui" font-size="12">
+<path d="M-100 0 A100 100 0 0 1 100 0 Z" fill="var(--a2)" opacity=".18"/><path d="M-100 0 A100 100 0 0 0 100 0 Z" fill="var(--ac)" opacity=".15"/>
+<circle r="100" fill="none" stroke="var(--bd)" stroke-width="2"/>
+<g id="lwTicks"></g>
+<text x="0" y="-36" text-anchor="middle" fill="var(--a2)" font-weight="700">near 0: bit 0</text><text x="0" y="46" text-anchor="middle" fill="var(--ac)" font-weight="700">near 8: bit 1</text></svg>
+<p>Picture the 17-clock: results in the top half (near 0) decode as 0, results in the bottom half (near 8) as 1. Our two results, 2 and 10, are marked. The noise nudges the result a little but, as long as the total noise stays small, never across the border.</p>
+
+<h3>Try toy LWE encryption</h3>
+<p>Each press makes a fresh random key (q = 97, 3 secret numbers, 8 noisy rows) and encrypts your bit.</p>
+<div class="lb"><span class="mu">Bit to send:</span><button data-lw="0" class="go">0</button><button data-lw="1">1</button><button id="lwR">Encrypt with a new key</button></div>
+<div class="lb"><label class="th">Noise size <b id="lwNv"></b><input id="lwN" type="range" min="0" max="12" value="2" aria-label="Noise size"></label></div>
+<p class="m lstate" id="lwT"></p><p id="lwO"></p></section>
+
+<section data-split="h3" class="s"><h2>2.3 ML-KEM (Kyber): the new key exchange</h2>
+<p class="lead"><b>ML-KEM</b> (formerly CRYSTALS-Kyber) is the main post-quantum key exchange, standardized as FIPS 203 in 2024 and already used by major browsers. It is LWE (2.2) made fast and compact.</p>
+<h3>Numbers become polynomials</h3>
+<p>Plain LWE needs huge tables of numbers. ML-KEM packs 256 numbers into one <b>polynomial</b>: an expression like 3 + 5x + 2x² + … + 7x²⁵⁵, where each coefficient is a number on a clock of size <b>q = 3329</b>.</p>
+<p>Polynomials are multiplied as usual, with one wrap-around rule: <b>x²⁵⁶ = −1</b>. So the result never grows past x²⁵⁵. Here is the same rule on a small scale, with x⁴ = −1:</p>
+<div class="ex">(x³ + 2) · (x + 1) = x⁴ + x³ + 2x + 2. Replace x⁴ by −1: −1 + x³ + 2x + 2 = <b>x³ + 2x + 1</b>.</div>
+<p>One polynomial multiplication does the work of a whole 256 × 256 table, and a clever shortcut (the <b>number-theoretic transform</b>, a fast way to multiply polynomials using clock arithmetic) makes it very fast.</p>
+<h3>Small blocks called modules</h3>
+<p>Instead of one giant polynomial, ML-KEM uses a small k × k grid of them, called a <b>module</b>. Changing k changes the security level:</p>
+<div class="tw"><table class="tg"><tr><th>Version</th><th>k</th><th>Level</th><th>Public key</th><th>Ciphertext</th><th>Shared secret</th></tr>
+<tr><td>ML-KEM-512</td><td>2</td><td>1</td><td>800 bytes</td><td>768 bytes</td><td>32 bytes</td></tr>
+<tr><td>ML-KEM-768</td><td>3</td><td>3</td><td>1,184 bytes</td><td>1,088 bytes</td><td>32 bytes</td></tr>
+<tr><td>ML-KEM-1024</td><td>4</td><td>5</td><td>1,568 bytes</td><td>1,568 bytes</td><td>32 bytes</td></tr></table></div>
+<h3>How a key exchange runs</h3>
+<p>It follows the toy encryption from 2.2 exactly, with polynomials in place of numbers:</p>
+<ol><li><b>KeyGen (Bob):</b> picks a small secret s and small noise e, publishes the public key (A, t = A·s + e). A is a grid of random polynomials, made from a short seed so it doesn't need to be sent in full.</li>
+<li><b>Encaps (Alice):</b> picks a random 32-byte message m, uses fresh small r, e₁, e₂ and computes u = Aᵀ·r + e₁ and v = tᵀ·r + e₂ + m·(q/2), just like adding "half the clock". She sends (u, v) and derives the shared key K from m with a hash.</li>
+<li><b>Decaps (Bob):</b> computes v − sᵀ·u, which is m·(q/2) plus small noise, rounds each coefficient to 0 or q/2 to recover m, and derives the same K.</li></ol>
+<div class="note"><b>A safety check (the Fujisaki–Okamoto transform).</b> After decrypting, Bob re-encrypts m himself and checks that he gets exactly the same ciphertext. If a forged ciphertext is detected, he returns a useless random key. This blocks attackers who send trick ciphertexts to learn about s.</div>
+<h3>Speed and size</h3>
+<p>ML-KEM is <b>faster than RSA and elliptic curves</b>: generating keys and exchanging a secret takes a fraction of a millisecond. Its only cost is size: about 1 KB each way, against 32 bytes for elliptic curves. Bigger, but still tiny next to a typical web page.</p></section>
+
+<section data-split="h3" class="s"><h2>2.4 Lattice signatures: ML-DSA and FN-DSA</h2>
+<p class="lead">Signatures use the same lattice ideas. The challenge: show you know the secret without the signature leaking it.</p>
+<h3>Signatures in three steps</h3>
+<div class="grid"><div class="card"><b>1. Commit</b><span>The signer picks a random "mask" y and publishes a fingerprint w of it.</span></div><div class="card"><b>2. Challenge</b><span>A hash of the message and w produces a small challenge c, which nobody can predict or choose.</span></div><div class="card"><b>3. Respond</b><span>The signer sends z = y + c·s. The mask y hides the secret s.</span></div></div>
+<p>The verifier checks the answer using only public values. This recipe is called <b>Fiat–Shamir</b>, after the people who showed how a hash can replace a live questioner.</p>
+<h3>Toy example with numbers</h3>
+<p>Clock q = 97, public number a = 10. Private key s = 3. Public key t = a·s = <b>30</b>.</p>
+<div class="ex"><p><b>Commit:</b> random mask y = −5, so w = a·y = −50 → <b>47</b> (mod 97).</p>
+<p><b>Challenge:</b> the hash of (message, 47) gives c = <b>2</b>.</p>
+<p><b>Respond:</b> z = y + c·s = −5 + 2·3 = <b>1</b>. The signature is (c = 2, z = 1).</p>
+<p><b>Verify:</b> a·z − c·t = 10·1 − 2·30 = −50 → <b>47</b> = w ✓. The verifier rebuilds w, re-hashes, and gets the same c.</p></div>
+<p>(In this toy, s could be found by dividing 30 by 10. In real ML-DSA, s is a short vector of polynomials and t = A·s + e is an LWE sample, so it can't be undone.)</p>
+<h3>Rejection, or "with aborts"</h3>
+<p>If z = y + c·s comes out unusually large, it could hint at s (a big z suggests a big s pushed it there). So the signer <b>throws it away and tries again</b> with a new mask. Only signatures inside a safe range are published.</p>
+<div class="ex">With s = 3 and c = 2, only z between −4 and 4 is published. Mask y = −5 gives z = 1: accept. Mask y = 8 gives z = 14: too big, reject and retry. On average ML-DSA needs a handful of tries per signature, which is still very fast.</div>
+<p>This idea is called <b>Fiat–Shamir with aborts</b> (Vadim Lyubashevsky), and it is the heart of ML-DSA.</p>
+<h3>ML-DSA and FN-DSA compared</h3>
+<div class="tw"><table class="tg"><tr><th>Scheme</th><th>Level</th><th>Public key</th><th>Signature</th><th>Notes</th></tr>
+<tr><td>ML-DSA-44</td><td>2</td><td>1,312 B</td><td>2,420 B</td><td>Simple, fast, the default choice</td></tr>
+<tr><td>ML-DSA-65</td><td>3</td><td>1,952 B</td><td>3,309 B</td><td></td></tr>
+<tr><td>ML-DSA-87</td><td>5</td><td>2,592 B</td><td>4,627 B</td><td></td></tr>
+<tr><td>FN-DSA-512 (Falcon)</td><td>1</td><td>897 B</td><td>about 666 B</td><td>Smallest; tricky to implement safely</td></tr></table></div>
+<p><b>FN-DSA</b> (Falcon) uses a different lattice idea, the "good basis as trapdoor" from 2.1: the signer uses the secret good basis to find a lattice point very close to a target made from the message hash. Its signatures are much smaller, but it needs careful floating-point maths (the fast Fourier transform) to avoid leaking secrets.</p></section>
+<div class="pn"><a href="part1.html">← Part 1</a><a href="part3.html">Part 3 →</a></div></main></div>
+
+<script src="js/part2.js"></script>
+<script src="js/site.js"></script>
+</body></html>
